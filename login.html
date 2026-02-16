@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Login - WorkPulse</title>
+</head>
+<body>
+
+<h2>Login</h2>
+
+<input type="email" id="email" placeholder="Email"><br><br>
+<input type="password" id="password" placeholder="Password"><br><br>
+<button id="loginBtn">Login</button>
+
+<p id="msg"></p>
+
+<script type="module">
+import { loginUser } from "./js/auth.js";
+
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const result = await loginUser(email, password);
+
+  if (result.error) {
+    document.getElementById("msg").innerText = result.error.message;
+    return;
+  }
+
+  if (result.role === "super_admin") {
+    window.location.href = "super.html";
+  } else {
+    window.location.href = "dashboard.html";
+  }
+});
+</script>
+
+</body>
+</html>

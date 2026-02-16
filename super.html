@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Super Admin - WorkPulse</title>
+</head>
+<body>
+
+<h2>Super Admin Panel</h2>
+<button id="logoutBtn">Logout</button>
+
+<script type="module">
+import { checkSession, logoutUser } from "./js/auth.js";
+
+await checkSession();
+
+if (localStorage.getItem("role") !== "super_admin") {
+  window.location.href = "dashboard.html";
+}
+
+document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+</script>
+
+</body>
+</html>

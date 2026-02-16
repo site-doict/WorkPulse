@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>User Dashboard - WorkPulse</title>
+</head>
+<body>
+
+<h2>Dashboard</h2>
+
+<button id="inBtn">Mark In</button>
+<button id="outBtn">Mark Out</button>
+<button id="logoutBtn">Logout</button>
+
+<script type="module">
+import { checkSession, logoutUser } from "./js/auth.js";
+import { loadAttendance, markIn, markOut } from "./js/dashboard.js";
+
+await checkSession();
+
+document.getElementById("inBtn").addEventListener("click", markIn);
+document.getElementById("outBtn").addEventListener("click", markOut);
+document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+
+loadAttendance();
+</script>
+
+</body>
+</html>
