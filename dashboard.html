@@ -326,15 +326,12 @@ setInterval(tick, 1000);
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 const tFmt = t => {
   if (!t) return "—";
-  const d = new Date(t);
-  // Manually add 6 hours for BD time (UTC+6)
-  const bd = new Date(d.getTime() + (6 * 60 * 60 * 1000));
-  let h = bd.getUTCHours();
-  const m = String(bd.getUTCMinutes()).padStart(2, "0");
-  const s = String(bd.getUTCSeconds()).padStart(2, "0");
-  const ampm = h >= 12 ? "PM" : "AM";
-  h = h % 12 || 12;
-  return `${String(h).padStart(2,"0")}:${m}:${s} ${ampm}`;
+  // Force UTC parsing — replace space with T and add Z if missing
+  const utcStr = t.includes("Z") ? t : t.replace(" ", "T") + "Z";
+  const bd = new Date(new Date(utcStr).getTime() + 6 * 60 * 60 * 1000);
+  let h = bd.getUTCHours(), m = String(bd.getUTCMinutes()).padStart(2,"0"), s = String(bd.getUTCSeconds()).padStart(2,"0");
+  const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+  return `${String(h).padStart(2,"0")}:${m}:${s} ${ap}`;
 };
 
 const dFmt = d => {
@@ -488,5 +485,6 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
 </script>
 </body>
 </html>
+
 
 
