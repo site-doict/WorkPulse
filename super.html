@@ -1,33 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Super Admin - WorkPulse</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+  </style>
 </head>
 <body>
 
 <h2>Super Admin Panel</h2>
+<p id="welcome"></p>
 <button id="logoutBtn">Logout</button>
 
+<h3>All Users</h3>
+<ul id="usersList"></ul>
+
 <script type="module">
-import { checkSession, logoutUser } from "./js/auth.js";
-import { loadAllUsers } from "./js/super.js";
-  
-const user = await checkSession();
+  import { checkSession, logoutUser, supabase } from "./js/auth.js";
 
-const { data: profile } = await supabase
-  .from("profiles")
-  .select("role")
-  .eq("id", user.id)
-  .single();
+  const user = await checkSession(); // get logged-in user
 
-if (profile.role !== "super_admin") {
-  window.location.href = "dashboard.html";
-}
+  // Verify super_admin role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .single();
 
-document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+  if (profile.role !== "super_admin") {
+    window.location.href = "dashboard.html";
+  }
+
+  document.getElementById("welcome").innerText = `Welcome, ${user.email} (Super Admin)`;
+  document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+
+  // Load all users
+  const { data: users, error } = await supabase
+    .from("profiles")
+    .select("id, role, company_id");
+
+  const usersListEl = document.getElementById("usersList");
+
+  if (error) {
+    usersListEl.innerHTML = "<li>Error loading users</li>";
+  } else {
+    users.forEach(u => {
+      const li = document.createElement("li");
+      li.textContent = `ID: ${u.id} | Role: ${u.role} | Company: ${u.company_id || "-"}`;
+      usersListEl.appendChild(li);
+    });
+  }
 </script>
 
 </body>
 </html>
-
-
