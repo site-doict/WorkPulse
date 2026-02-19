@@ -1,12 +1,12 @@
 import { supabase } from "./auth.js";
 
 export async function loadAttendance() {
-  const userId = localStorage.getItem("user_id");
+  const userId = localStorage.getItem("userId");
 
   const { data, error } = await supabase
     .from("attendance")
     .select("*")
-    .eq("user_id", userId)
+    .eq("userId", userId)
     .order("date", { ascending: false })
     .limit(7);
 
@@ -16,13 +16,13 @@ export async function loadAttendance() {
 }
 
 export async function markIn() {
-  const userId = localStorage.getItem("user_id");
+  const userId = localStorage.getItem("userId");
   const now = new Date();
   const date = now.toISOString().split("T")[0];
 
   await supabase.from("attendance").insert([
     {
-      user_id: userId,
+      userId: userId,
       date: date,
       in_time: now.toISOString(),
       status: "Present"
@@ -31,13 +31,13 @@ export async function markIn() {
 }
 
 export async function markOut() {
-  const userId = localStorage.getItem("user_id");
+  const userId = localStorage.getItem("userId");
   const now = new Date();
   const date = now.toISOString().split("T")[0];
 
   await supabase
     .from("attendance")
     .update({ out_time: now.toISOString() })
-    .eq("user_id", userId)
+    .eq("userId", userId)
     .eq("date", date);
 }
