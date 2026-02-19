@@ -1,7 +1,6 @@
-// js/dashboard.js
 import { supabase } from "./auth.js";
 
-// Load last 7 attendance entries
+// Returns attendance array
 export async function loadAttendance(userId) {
   const { data, error } = await supabase
     .from("attendance")
@@ -12,18 +11,16 @@ export async function loadAttendance(userId) {
 
   if (error) {
     console.error(error);
-    return;
+    return [];
   }
 
-  console.log("Attendance:", data);
+  return data;
 }
 
-// Mark In (prevent multiple in same day)
 export async function markIn(userId) {
   const now = new Date();
   const date = now.toISOString().split("T")[0];
 
-  // Check if already marked in today
   const { data: existing } = await supabase
     .from("attendance")
     .select("*")
@@ -32,7 +29,7 @@ export async function markIn(userId) {
     .single();
 
   if (existing) {
-    alert("Already marked In for today");
+    alert("Already marked In today");
     return;
   }
 
@@ -48,7 +45,6 @@ export async function markIn(userId) {
   alert("Marked In successfully");
 }
 
-// Mark Out
 export async function markOut(userId) {
   const now = new Date();
   const date = now.toISOString().split("T")[0];
@@ -66,7 +62,7 @@ export async function markOut(userId) {
   }
 
   if (existing.out_time) {
-    alert("Already marked Out for today");
+    alert("Already marked Out today");
     return;
   }
 
