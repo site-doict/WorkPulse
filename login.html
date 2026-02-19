@@ -1,39 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Login - WorkPulse</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkPulse Login</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #141e30, #243b55);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .card {
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 10px;
+      width: 320px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #243b55;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin-top: 10px;
+      background: #243b55;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #141e30;
+    }
+
+    .brand {
+      margin-bottom: 20px;
+      font-weight: bold;
+      font-size: 18px;
+      color: #243b55;
+    }
+
+    .error {
+      color: red;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
 <body>
 
-<h2>Login</h2>
+  <div class="card">
+    <div class="brand">WorkPulse</div>
+    <h2>Login</h2>
 
-<input type="email" id="email" placeholder="Email"><br><br>
-<input type="password" id="password" placeholder="Password"><br><br>
-<button id="loginBtn">Login</button>
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
 
-<p id="msg"></p>
+    <button id="loginBtn">Login</button>
+    <div id="error" class="error"></div>
+  </div>
 
-<script type="module">
-import { loginUser } from "./js/auth.js";
+  <script type="module">
+    import { loginUser } from "./js/auth.js";
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-
-  const result = await loginUser(email, password);
-
-  if (result.error) {
-    document.getElementById("msg").innerText = result.error.message;
-    return;
-  }
-
-  if (result.role === "super_admin") {
-    window.location.href = "super.html";
-  } else {
-    window.location.href = "dashboard.html";
-  }
-});
-</script>
+    document.getElementById("loginBtn").addEventListener("click", loginUser);
+  </script>
 
 </body>
 </html>
