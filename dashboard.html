@@ -1,107 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>WorkPulse Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    /* Reset & body */
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      background: linear-gradient(135deg, #141e30, #243b55);
-      color: #333;
-      display: flex;
-      justify-content: center;
-      padding: 20px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkPulse Dashboard</title>
+<style>
+  /* Body */
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    color: #333;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+  }
 
-    /* Container */
-    .container {
-      width: 100%;
-      max-width: 900px;
-      background: #f9f9f9;
-      border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-      padding: 30px;
-    }
+  /* Container */
+  .container {
+    width: 100%;
+    max-width: 900px;
+    background: #f9f9f9;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    padding: 30px;
+    position: relative;
+  }
 
-    /* Header */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-    }
+  /* Header */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+    gap: 10px;
+  }
 
-    .welcome {
-      font-size: 20px;
-      font-weight: bold;
-    }
+  .welcome {
+    font-size: 20px;
+    font-weight: bold;
+    color: #243b55;
+  }
 
-    #clock {
-      font-size: 18px;
-      font-weight: 500;
-      color: #243b55;
-    }
+  #clock {
+    font-size: 18px;
+    font-weight: 500;
+    color: #243b55;
+  }
 
-    button {
-      padding: 12px 25px;
-      margin: 5px;
-      border-radius: 6px;
-      border: none;
-      background: #243b55;
-      color: white;
-      font-size: 15px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+  button {
+    padding: 12px 25px;
+    margin: 5px;
+    border-radius: 6px;
+    border: none;
+    background: #243b55;
+    color: white;
+    font-size: 15px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
 
-    button:hover {
-      background: #141e30;
-    }
+  button:hover {
+    background: #141e30;
+  }
 
-    /* Card for actions */
-    .actions {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 30px;
-      gap: 15px;
-    }
+  .actions {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
 
-    /* Table */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 14px;
-    }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
 
-    th, td {
-      text-align: center;
-      padding: 10px;
-      border-bottom: 1px solid #ccc;
-    }
+  th, td {
+    text-align: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+  }
 
-    th {
-      background: #243b55;
-      color: white;
-    }
+  th {
+    background: #243b55;
+    color: white;
+  }
 
-    tr:nth-child(even) {
-      background: #f2f2f2;
-    }
+  tr:nth-child(even) {
+    background: #f2f2f2;
+  }
 
-    tr:hover {
-      background: #d9e1f2;
-    }
+  tr:hover {
+    background: #d9e1f2;
+  }
 
-    @media (max-width: 600px) {
-      .actions { flex-direction: column; }
-      button { width: 100%; }
-    }
-  </style>
+  /* Notification */
+  #notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+
+  .notification {
+    padding: 15px 20px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s ease;
+  }
+
+  .notification.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .notification.success { background-color: #28a745; }
+  .notification.error { background-color: #dc3545; }
+  .notification.info { background-color: #17a2b8; }
+
+  @media (max-width: 600px) {
+    .actions { flex-direction: column; }
+    button { width: 100%; }
+  }
+</style>
 </head>
 <body>
+
+<div id="notification"></div>
 
 <div class="container">
   <div class="header">
@@ -126,68 +160,142 @@
       </tr>
     </thead>
     <tbody id="attendanceList">
-      <!-- Attendance rows will appear here -->
+      <!-- Attendance rows -->
     </tbody>
   </table>
 </div>
 
 <script type="module">
 import { checkSession, logoutUser } from "./js/auth.js";
-import { loadAttendance, markIn, markOut } from "./js/dashboard.js";
+import { supabase } from "./js/auth.js";
 
-const user = await checkSession(); 
+// Inline notification
+function showNotification(message, type="info", duration=3000) {
+  const container = document.getElementById("notification");
+  const notif = document.createElement("div");
+  notif.className = `notification ${type}`;
+  notif.innerText = message;
+  container.appendChild(notif);
+
+  setTimeout(() => notif.classList.add("show"), 10);
+  setTimeout(() => {
+    notif.classList.remove("show");
+    setTimeout(() => container.removeChild(notif), 400);
+  }, duration);
+}
+
+// Dashboard attendance functions
+async function loadAttendance(userId) {
+  const { data, error } = await supabase
+    .from("attendance")
+    .select("*")
+    .eq("user_id", userId)
+    .order("date", { ascending: false })
+    .limit(7);
+
+  if (error) {
+    showNotification(error.message, "error");
+    return [];
+  }
+  return data;
+}
+
+async function markIn(userId) {
+  const now = new Date();
+  const date = now.toISOString().split("T")[0];
+
+  const { data: existing } = await supabase
+    .from("attendance")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("date", date)
+    .single();
+
+  if (existing) {
+    const inTime = new Date(existing.in_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" });
+    showNotification(`Already marked In today at ${inTime}`, "info");
+    return;
+  }
+
+  await supabase.from("attendance").insert([{
+    user_id: userId,
+    date: date,
+    in_time: now.toISOString(),
+    status: "Present"
+  }]);
+
+  const localTime = now.toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" });
+  showNotification(`Marked In successfully at ${localTime}`, "success");
+}
+
+async function markOut(userId) {
+  const now = new Date();
+  const date = now.toISOString().split("T")[0];
+
+  const { data: existing } = await supabase
+    .from("attendance")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("date", date)
+    .single();
+
+  if (!existing) {
+    showNotification("You must Mark In first!", "error");
+    return;
+  }
+
+  if (existing.out_time) {
+    const outTime = new Date(existing.out_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" });
+    showNotification(`Already marked Out today at ${outTime}`, "info");
+    return;
+  }
+
+  await supabase
+    .from("attendance")
+    .update({ out_time: now.toISOString() })
+    .eq("user_id", userId)
+    .eq("date", date);
+
+  const localTime = now.toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" });
+  showNotification(`Marked Out successfully at ${localTime}`, "success");
+}
+
+// Init
+const user = await checkSession();
 document.getElementById("welcome").innerText = `Welcome, ${user.email}`;
 
 // Live Clock
 function updateClock() {
   const now = new Date();
   const options = {
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true,
-    timeZone: "Asia/Dhaka"
+    weekday: "short", year: "numeric", month: "short", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: true, timeZone: "Asia/Dhaka"
   };
-  const timeString = now.toLocaleString("en-US", options);
-  document.getElementById("clock").innerText = timeString;
+  document.getElementById("clock").innerText = now.toLocaleString("en-US", options);
 }
 updateClock();
 setInterval(updateClock, 1000);
 
-// Attendance Table
+// Render attendance table
 const attendanceListEl = document.getElementById("attendanceList");
-
 async function renderAttendance() {
   const data = await loadAttendance(user.id);
   attendanceListEl.innerHTML = "";
   data.forEach(a => {
-    const inTime = a.in_time ? new Date(a.in_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" }) : "-";
-    const outTime = a.out_time ? new Date(a.out_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" }) : "-";
-    const dateBD = new Date(a.date + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Dhaka" });
-    const status = a.status || "-";
+    const inTime = a.in_time ? new Date(a.in_time).toLocaleTimeString("en-US", { hour12:true, timeZone:"Asia/Dhaka" }) : "-";
+    const outTime = a.out_time ? new Date(a.out_time).toLocaleTimeString("en-US", { hour12:true, timeZone:"Asia/Dhaka" }) : "-";
+    const dateBD = new Date(a.date + "T00:00:00Z").toLocaleDateString("en-GB", { weekday:"short", day:"2-digit", month:"short", year:"numeric", timeZone:"Asia/Dhaka" });
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td>${dateBD}</td><td>${inTime}</td><td>${outTime}</td><td>${status}</td>`;
+    tr.innerHTML = `<td>${dateBD}</td><td>${inTime}</td><td>${outTime}</td><td>${a.status || "-"}</td>`;
     attendanceListEl.appendChild(tr);
   });
 }
-
 renderAttendance();
 
 // Button events
-document.getElementById("inBtn").addEventListener("click", async () => {
-  await markIn(user.id);
-  renderAttendance();
-});
-
-document.getElementById("outBtn").addEventListener("click", async () => {
-  await markOut(user.id);
-  renderAttendance();
-});
-
+document.getElementById("inBtn").addEventListener("click", async () => { await markIn(user.id); renderAttendance(); });
+document.getElementById("outBtn").addEventListener("click", async () => { await markOut(user.id); renderAttendance(); });
 document.getElementById("logoutBtn").addEventListener("click", logoutUser);
 
 </script>
