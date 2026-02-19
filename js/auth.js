@@ -1,16 +1,16 @@
 // js/auth.js
 import { supabase } from "./config.js";
 
-// Login function
-export async function loginUser(email, password) {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+// ✅ Re-export so dashboard.html can do: import { supabase } from "./js/auth.js"
+export { supabase };
 
+export { supabase };
+
+// ── Login ──────────────────────────────────────────────────────────────────
+export async function loginUser(email, password) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error };
 
-  // fetch user profile for role
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("role, company_id")
@@ -21,23 +21,21 @@ export async function loginUser(email, password) {
 
   localStorage.setItem("user_id", data.user.id);
   localStorage.setItem("role", profile.role);
-
   return { role: profile.role, userId: data.user.id };
 }
 
-// Check session
+// ── Check Session ──────────────────────────────────────────────────────────
+// Returns the Supabase user object, or redirects to login.html if not logged in.
 export async function checkSession() {
-  const { data } = await supabase.auth.getUser();
-
-  if (!data.user) {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data?.user) {
     window.location.href = "login.html";
     return null;
   }
-
   return data.user;
 }
 
-// Logout
+// ── Logout ─────────────────────────────────────────────────────────────────
 export async function logoutUser() {
   await supabase.auth.signOut();
   localStorage.clear();
