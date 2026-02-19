@@ -10,7 +10,8 @@
 
 <script type="module">
 import { checkSession, logoutUser } from "./js/auth.js";
-
+import { loadAllUsers } from "./js/super.js";
+  
 await checkSession();
 
 if (localStorage.getItem("role") !== "super_admin") {
@@ -22,3 +23,4 @@ document.getElementById("logoutBtn").addEventListener("click", logoutUser);
 
 </body>
 </html>
+
