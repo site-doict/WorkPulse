@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkPulse - Attendance System</title>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+
+    .container {
+      max-width: 400px;
+    }
+
+    h1 {
+      margin-bottom: 10px;
+      font-size: 32px;
+    }
+
+    p {
+      margin-bottom: 20px;
+      font-size: 16px;
+      opacity: 0.9;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: white;
+      color: #2a5298;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    .btn:hover {
+      background: #f0f0f0;
+    }
+  </style>
+
+  <script>
+    // Auto redirect after 2 seconds
+    setTimeout(() => {
+      window.location.href = "login.html";
+    }, 2000);
+  </script>
+
+</head>
+<body>
+
+  <div class="container">
+    <h1>WorkPulse</h1>
+    <p>Professional Attendance & Employee Management System</p>
+    <a href="login.html" class="btn">Go to Login</a>
+  </div>
+
+</body>
+</html>
