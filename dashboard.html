@@ -1,30 +1,58 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>User Dashboard - WorkPulse</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+  </style>
 </head>
 <body>
 
 <h2>Dashboard</h2>
+<p id="welcome"></p>
 
 <button id="inBtn">Mark In</button>
 <button id="outBtn">Mark Out</button>
 <button id="logoutBtn">Logout</button>
 
+<h3>Last 7 Days Attendance</h3>
+<ul id="attendanceList"></ul>
+
 <script type="module">
-import { checkSession, logoutUser } from "./js/auth.js";
-import { loadAttendance, markIn, markOut } from "./js/dashboard.js";
+  import { checkSession, logoutUser } from "./js/auth.js";
+  import { loadAttendance, markIn, markOut } from "./js/dashboard.js";
 
-const user = await checkSession();  // real session
+  const user = await checkSession(); // get current user
+  document.getElementById("welcome").innerText = `Welcome, ${user.email}`;
 
-document.getElementById("inBtn").addEventListener("click", () => markIn(user.id));
-document.getElementById("outBtn").addEventListener("click", () => markOut(user.id));
-document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+  // Load attendance initially
+  const attendanceListEl = document.getElementById("attendanceList");
+  async function renderAttendance() {
+    const data = await loadAttendance(user.id);
+    attendanceListEl.innerHTML = "";
+    data.forEach(a => {
+      const li = document.createElement("li");
+      li.textContent = `${a.date} | In: ${a.in_time ? new Date(a.in_time).toLocaleTimeString() : "-"} | Out: ${a.out_time ? new Date(a.out_time).toLocaleTimeString() : "-"}`;
+      attendanceListEl.appendChild(li);
+    });
+  }
 
-loadAttendance(user.id);
+  renderAttendance();
+
+  document.getElementById("inBtn").addEventListener("click", async () => {
+    await markIn(user.id);
+    renderAttendance();
+  });
+
+  document.getElementById("outBtn").addEventListener("click", async () => {
+    await markOut(user.id);
+    renderAttendance();
+  });
+
+  document.getElementById("logoutBtn").addEventListener("click", logoutUser);
 </script>
 
 </body>
 </html>
-
-
