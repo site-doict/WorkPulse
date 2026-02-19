@@ -12,6 +12,7 @@
 
 <h2>Dashboard</h2>
 <p id="welcome"></p>
+<p id="clock" style="font-size: 18px; font-weight: bold;"></p>
 
 <button id="inBtn">Mark In</button>
 <button id="outBtn">Mark Out</button>
@@ -27,16 +28,48 @@
   const user = await checkSession(); // get current user
   document.getElementById("welcome").innerText = `Welcome, ${user.email}`;
 
+  function updateClock() {
+  const now = new Date();
+  const options = {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Dhaka"
+  };
+  const timeString = now.toLocaleString("en-US", options);
+  document.getElementById("clock").innerText = timeString;
+}
+
+// Update immediately
+updateClock();
+
+// Update every second
+setInterval(updateClock, 1000);
+
+
   // Load attendance initially
   const attendanceListEl = document.getElementById("attendanceList");
   async function renderAttendance() {
     const data = await loadAttendance(user.id);
     attendanceListEl.innerHTML = "";
     data.forEach(a => {
-      const li = document.createElement("li");
-      li.textContent = `${a.date} | In: ${a.in_time ? new Date(a.in_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" }) : "-"} | Out: ${a.out_time ? new Date(a.out_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" }) : "-"}`;
-      attendanceListEl.appendChild(li);
-    });
+  const li = document.createElement("li");
+
+  // convert UTC to BD timezone
+  const inTime = a.in_time ? new Date(a.in_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" }) : "-";
+  const outTime = a.out_time ? new Date(a.out_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" }) : "-";
+
+  // date in BD timezone
+  const dateBD = new Date(a.date + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Dhaka" });
+
+  li.textContent = `${dateBD} | In: ${inTime} | Out: ${outTime}`;
+  attendanceListEl.appendChild(li);
+});
   }
 
   renderAttendance();
@@ -56,4 +89,5 @@
 
 </body>
 </html>
+
 
