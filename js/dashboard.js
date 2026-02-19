@@ -1,4 +1,4 @@
-import { supabase } from "./auth.js";
+import { supabase } from "./config.js";
 
 // Returns attendance array
 export async function loadAttendance(userId) {
