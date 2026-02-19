@@ -34,7 +34,7 @@
     attendanceListEl.innerHTML = "";
     data.forEach(a => {
       const li = document.createElement("li");
-      li.textContent = `${a.date} | In: ${a.in_time ? new Date(a.in_time).toLocaleTimeString() : "-"} | Out: ${a.out_time ? new Date(a.out_time).toLocaleTimeString() : "-"}`;
+      li.textContent = `${a.date} | In: ${a.in_time ? new Date(a.in_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" }) : "-"} | Out: ${a.out_time ? new Date(a.out_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" }) : "-"}`;
       attendanceListEl.appendChild(li);
     });
   }
@@ -56,3 +56,4 @@
 
 </body>
 </html>
+
