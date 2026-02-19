@@ -21,6 +21,7 @@ export async function markIn(userId) {
   const now = new Date();
   const date = now.toISOString().split("T")[0];
 
+  // check if already marked
   const { data: existing } = await supabase
     .from("attendance")
     .select("*")
@@ -29,10 +30,12 @@ export async function markIn(userId) {
     .single();
 
   if (existing) {
-    alert("Already marked In today");
+    const inTime = new Date(existing.in_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" });
+    alert(`Already marked In today at ${inTime}`);
     return;
   }
 
+  // insert attendance
   await supabase.from("attendance").insert([
     {
       user_id: userId,
@@ -42,13 +45,15 @@ export async function markIn(userId) {
     }
   ]);
 
-  alert("Marked In successfully");
+  const localTime = now.toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" });
+  alert(`Marked In successfully at ${localTime}`);
 }
 
 export async function markOut(userId) {
   const now = new Date();
   const date = now.toISOString().split("T")[0];
 
+  // fetch today's attendance
   const { data: existing } = await supabase
     .from("attendance")
     .select("*")
@@ -62,15 +67,18 @@ export async function markOut(userId) {
   }
 
   if (existing.out_time) {
-    alert("Already marked Out today");
+    const outTime = new Date(existing.out_time).toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" });
+    alert(`Already marked Out today at ${outTime}`);
     return;
   }
 
+  // update out_time
   await supabase
     .from("attendance")
     .update({ out_time: now.toISOString() })
     .eq("user_id", userId)
     .eq("date", date);
 
-  alert("Marked Out successfully");
+  const localTime = now.toLocaleTimeString("en-US", { hour12: true, timeZone: "Asia/Dhaka" });
+  alert(`Marked Out successfully at ${localTime}`);
 }
