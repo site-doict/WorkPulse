@@ -15,16 +15,16 @@
 import { checkSession, logoutUser } from "./js/auth.js";
 import { loadAttendance, markIn, markOut } from "./js/dashboard.js";
 
-await checkSession();
+const user = await checkSession();  // real session
 
-document.getElementById("inBtn").addEventListener("click", markIn);
-document.getElementById("outBtn").addEventListener("click", markOut);
+document.getElementById("inBtn").addEventListener("click", () => markIn(user.id));
+document.getElementById("outBtn").addEventListener("click", () => markOut(user.id));
 document.getElementById("logoutBtn").addEventListener("click", logoutUser);
 
-loadAttendance();
+loadAttendance(user.id);
 </script>
-
 
 </body>
 </html>
+
 
