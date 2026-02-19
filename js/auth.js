@@ -1,8 +1,5 @@
 // js/auth.js
-import { createClient } from "https://esm.sh/@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./config.js";
-
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+import { supabase } from "./config.js";
 
 // Login function
 export async function loginUser(email, password) {
@@ -22,14 +19,13 @@ export async function loginUser(email, password) {
 
   if (profileError) return { error: profileError };
 
-  // store minimal info in localStorage if needed
   localStorage.setItem("user_id", data.user.id);
   localStorage.setItem("role", profile.role);
 
   return { role: profile.role, userId: data.user.id };
 }
 
-// Check session function
+// Check session
 export async function checkSession() {
   const { data } = await supabase.auth.getUser();
 
@@ -38,7 +34,7 @@ export async function checkSession() {
     return null;
   }
 
-  return data.user; // { id, email, etc. }
+  return data.user;
 }
 
 // Logout
