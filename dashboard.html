@@ -8,21 +8,23 @@
   body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
-    background: linear-gradient(135deg,#141e30,#243b55);
+    background: linear-gradient(135deg, #141e30, #243b55);
     color: #333;
     display: flex;
     justify-content: center;
     padding: 20px;
   }
+
   .container {
     width: 100%;
-    max-width: 950px;
-    background: #fdfdfd;
+    max-width: 900px;
+    background: #f9f9f9;
     border-radius: 12px;
-    box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
     padding: 30px;
     position: relative;
   }
+
   .header {
     display: flex;
     justify-content: space-between;
@@ -31,11 +33,22 @@
     margin-bottom: 25px;
     gap: 10px;
   }
-  .welcome { font-size: 20px; font-weight: bold; color: #243b55; }
-  #clock { font-size: 18px; font-weight: 500; color: #243b55; }
-  .actions { display: flex; justify-content: center; margin-bottom: 30px; gap: 15px; flex-wrap: wrap; }
+
+  .welcome {
+    font-size: 20px;
+    font-weight: bold;
+    color: #243b55;
+  }
+
+  #clock {
+    font-size: 18px;
+    font-weight: 500;
+    color: #243b55;
+  }
+
   button {
     padding: 12px 25px;
+    margin: 5px;
     border-radius: 6px;
     border: none;
     background: #243b55;
@@ -44,16 +57,51 @@
     cursor: pointer;
     transition: 0.3s;
   }
-  button:hover { background: #141e30; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th, td { text-align: center; padding: 12px; border-bottom: 1px solid #ccc; }
-  th { background: #243b55; color: white; }
-  tr:nth-child(even) { background: #f2f2f2; }
-  tr:hover { background: #d9e1f2; }
-  .present { background-color: #d4edda !important; }  /* Green */
-  .partial { background-color: #fff3cd !important; }  /* Yellow */
-  .absent { background-color: #f8d7da !important; }   /* Red */
-  #notification { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+
+  button:hover {
+    background: #141e30;
+  }
+
+  .actions {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  th, td {
+    text-align: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+  }
+
+  th {
+    background: #243b55;
+    color: white;
+  }
+
+  tr:nth-child(even) {
+    background: #f2f2f2;
+  }
+
+  tr:hover {
+    background: #d9e1f2;
+  }
+
+  #notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+  }
+
   .notification {
     padding: 15px 20px;
     margin-bottom: 10px;
@@ -65,11 +113,20 @@
     transform: translateY(-20px);
     transition: all 0.4s ease;
   }
-  .notification.show { opacity: 1; transform: translateY(0); }
+
+  .notification.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   .notification.success { background-color: #28a745; }
   .notification.error { background-color: #dc3545; }
   .notification.info { background-color: #17a2b8; }
-  @media (max-width: 600px) { .actions { flex-direction: column; } button { width: 100%; } }
+
+  @media (max-width: 600px) {
+    .actions { flex-direction: column; }
+    button { width: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -98,7 +155,9 @@
         <th>Status</th>
       </tr>
     </thead>
-    <tbody id="attendanceList"></tbody>
+    <tbody id="attendanceList">
+      <!-- Attendance rows will appear here -->
+    </tbody>
   </table>
 </div>
 
@@ -106,101 +165,129 @@
 import { checkSession, logoutUser } from "./js/auth.js";
 import { supabase } from "./js/auth.js";
 
-// Notification helper
-function showNotification(msg, type="info", duration=3000){
+// Notification function
+function showNotification(message, type="info", duration=3000) {
   const container = document.getElementById("notification");
   const notif = document.createElement("div");
   notif.className = `notification ${type}`;
-  notif.innerText = msg;
+  notif.innerText = message;
   container.appendChild(notif);
-  setTimeout(()=>notif.classList.add("show"),10);
-  setTimeout(()=>{
+
+  setTimeout(() => notif.classList.add("show"), 10);
+  setTimeout(() => {
     notif.classList.remove("show");
-    setTimeout(()=>container.removeChild(notif),400);
+    setTimeout(() => container.removeChild(notif), 400);
   }, duration);
 }
 
 // Attendance functions
-async function loadAttendance(userId){
+async function loadAttendance(userId) {
   const { data, error } = await supabase
     .from("attendance")
     .select("*")
     .eq("user_id", userId)
-    .order("date",{ascending:false})
+    .order("date", { ascending: false })
     .limit(7);
-  if(error){ showNotification(error.message,"error"); return []; }
+
+  if (error) {
+    showNotification(error.message, "error");
+    return [];
+  }
   return data;
 }
 
-async function markIn(userId){
+async function markIn(userId) {
   const now = new Date();
   const date = now.toISOString().split("T")[0];
-  const { data: existing } = await supabase.from("attendance")
-    .select("*").eq("user_id",userId).eq("date",date).single();
-  if(existing){
-    const inTime = new Date(existing.in_time).toLocaleTimeString("en-US",{hour12:true,timeZone:"Asia/Dhaka"});
-    showNotification(`Already marked In today at ${inTime}`,"info");
+
+  const { data: existing } = await supabase
+    .from("attendance")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("date", date)
+    .single();
+
+  if (existing) {
+    const inTime = new Date(existing.in_time).toLocaleTimeString("en-US", { hour12:true, timeZone:"Asia/Dhaka" });
+    showNotification(`Already marked In today at ${inTime}`, "info");
     return;
   }
-  await supabase.from("attendance").insert([{user_id:userId,date:date,in_time:now.toISOString(),status:"Present"}]);
-  const localTime = now.toLocaleTimeString("en-US",{hour12:true,timeZone:"Asia/Dhaka"});
-  showNotification(`Marked In successfully at ${localTime}`,"success");
+
+  await supabase.from("attendance").insert([{
+    user_id: userId,
+    date: date,
+    in_time: now.toISOString(),
+    status: "Present"
+  }]);
+
+  const localTime = now.toLocaleTimeString("en-US", { hour12:true, timeZone:"Asia/Dhaka" });
+  showNotification(`Marked In successfully at ${localTime}`, "success");
 }
 
-async function markOut(userId){
+async function markOut(userId) {
   const now = new Date();
   const date = now.toISOString().split("T")[0];
-  const { data: existing } = await supabase.from("attendance")
-    .select("*").eq("user_id",userId).eq("date",date).single();
-  if(!existing){ showNotification("You must Mark In first!","error"); return; }
-  if(existing.out_time){
-    const outTime = new Date(existing.out_time).toLocaleTimeString("en-US",{hour12:true,timeZone:"Asia/Dhaka"});
-    showNotification(`Already marked Out today at ${outTime}`,"info");
+
+  const { data: existing } = await supabase
+    .from("attendance")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("date", date)
+    .single();
+
+  if (!existing) {
+    showNotification("You must Mark In first!", "error");
     return;
   }
-  await supabase.from("attendance").update({out_time:now.toISOString()})
-    .eq("user_id",userId).eq("date",date);
-  const localTime = now.toLocaleTimeString("en-US",{hour12:true,timeZone:"Asia/Dhaka"});
-  showNotification(`Marked Out successfully at ${localTime}`,"success");
+
+  if (existing.out_time) {
+    const outTime = new Date(existing.out_time).toLocaleTimeString("en-US", { hour12:true, timeZone:"Asia/Dhaka" });
+    showNotification(`Already marked Out today at ${outTime}`, "info");
+    return;
+  }
+
+  await supabase
+    .from("attendance")
+    .update({ out_time: now.toISOString() })
+    .eq("user_id", userId)
+    .eq("date", date);
+
+  const localTime = now.toLocaleTimeString("en-US", { hour12:true, timeZone:"Asia/Dhaka" });
+  showNotification(`Marked Out successfully at ${localTime}`, "success");
 }
 
-// Init dashboard
+// Main
 const user = await checkSession();
 document.getElementById("welcome").innerText = `Welcome, ${user.email}`;
 
 // Live Clock
-function updateClock(){
+function updateClock() {
   const now = new Date();
-  const options = { weekday:"short",year:"numeric",month:"short",day:"2-digit",
-                    hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true,timeZone:"Asia/Dhaka" };
-  document.getElementById("clock").innerText = now.toLocaleString("en-US",options);
+  const options = { weekday:"short", year:"numeric", month:"short", day:"2-digit", hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:true, timeZone:"Asia/Dhaka" };
+  document.getElementById("clock").innerText = now.toLocaleString("en-US", options);
 }
 updateClock();
-setInterval(updateClock,1000);
+setInterval(updateClock, 1000);
 
-// Render attendance table with row color
+// Render table
 const attendanceListEl = document.getElementById("attendanceList");
-async function renderAttendance(){
+async function renderAttendance() {
   const data = await loadAttendance(user.id);
   attendanceListEl.innerHTML = "";
-  data.forEach(a=>{
-    const inTime = a.in_time ? new Date(a.in_time).toLocaleTimeString("en-US",{hour12:true,timeZone:"Asia/Dhaka"}) : "-";
-    const outTime = a.out_time ? new Date(a.out_time).toLocaleTimeString("en-US",{hour12:true,timeZone:"Asia/Dhaka"}) : "-";
-    const dateBD = new Date(a.date+"T00:00:00Z").toLocaleDateString("en-GB",{weekday:"short",day:"2-digit",month:"short",year:"numeric",timeZone:"Asia/Dhaka"});
+  data.forEach(a => {
+    const inTime = a.in_time ? new Date(a.in_time).toLocaleTimeString("en-US",{ hour12:true, timeZone:"Asia/Dhaka" }) : "-";
+    const outTime = a.out_time ? new Date(a.out_time).toLocaleTimeString("en-US",{ hour12:true, timeZone:"Asia/Dhaka" }) : "-";
+    const dateBD = new Date(a.date + "T00:00:00Z").toLocaleDateString("en-GB",{ weekday:"short", day:"2-digit", month:"short", year:"numeric", timeZone:"Asia/Dhaka" });
     const tr = document.createElement("tr");
-    let rowClass = "absent";
-    if(a.in_time && a.out_time) rowClass="present";
-    else if(a.in_time && !a.out_time) rowClass="partial";
-    tr.className = rowClass;
-    tr.innerHTML=`<td>${dateBD}</td><td>${inTime}</td><td>${outTime}</td><td>${a.status || "-"}</td>`;
+    tr.innerHTML = `<td>${dateBD}</td><td>${inTime}</td><td>${outTime}</td><td>${a.status||"-"}</td>`;
     attendanceListEl.appendChild(tr);
   });
 }
 renderAttendance();
 
 // Button events
-document.getElementById("inBtn").addEventListener("click", async()=>{ await markIn(user.id); renderAttendance(); });
-document.getElementById("outBtn").addEventListener("click", async()=>{ await markOut(user.id); renderAttendance(); });
+document.getElementById("inBtn").addEventListener("click", async ()=>{ await markIn(user.id); renderAttendance(); });
+document.getElementById("outBtn").addEventListener("click", async ()=>{ await markOut(user.id); renderAttendance(); });
 document.getElementById("logoutBtn").addEventListener("click", logoutUser);
 
 </script>
