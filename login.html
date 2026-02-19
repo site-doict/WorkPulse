@@ -86,8 +86,25 @@
   <script type="module">
     import { loginUser } from "./js/auth.js";
 
-    document.getElementById("loginBtn").addEventListener("click", loginUser);
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  const { error, role } = await loginUser(email, password);
+
+  if (error) {
+    document.getElementById("error").innerText = error.message;
+    return;
+  }
+
+  if (role === "super_admin") {
+    window.location.href = "super.html";
+  } else {
+    window.location.href = "dashboard.html";
+  }
+});
   </script>
 
 </body>
 </html>
+
