@@ -2,7 +2,6 @@
 import { supabase } from "./config.js";
 
 // ✅ Re-export so dashboard.html can do: import { supabase } from "./js/auth.js"
-export { supabase };
 
 export { supabase };
 
