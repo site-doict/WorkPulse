@@ -1,58 +1,991 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Super Admin - WorkPulse</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    button { padding: 10px 20px; margin: 5px; cursor: pointer; }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkPulse — Super Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #05080f; --surface: #090e1a; --surface2: #0e1525; --surface3: #131c2e;
+    --border: rgba(139,92,246,0.1); --border2: rgba(139,92,246,0.2);
+    --accent: #8b5cf6; --accent2: #a78bfa; --accent3: #c4b5fd;
+    --green: #10b981; --red: #ef4444; --yellow: #f59e0b; --blue: #3b82f6; --orange: #f97316;
+    --text: #e2e8f0; --text2: #94a3b8; --muted: #475569;
+    --font: 'Manrope', sans-serif; --mono: 'IBM Plex Mono', monospace;
+  }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body::before { content:''; position:fixed; inset:0; background: radial-gradient(ellipse 60% 40% at 10% 20%, rgba(139,92,246,0.08) 0%, transparent 60%), radial-gradient(ellipse 50% 30% at 90% 80%, rgba(59,130,246,0.05) 0%, transparent 60%); pointer-events:none; z-index:0; }
+
+  /* NOTIFICATIONS */
+  #notif { position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px; pointer-events:none; }
+  .notif { display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:10px; font-family:var(--mono); font-size:12px; font-weight:500; min-width:280px; border:1px solid transparent; box-shadow:0 8px 32px rgba(0,0,0,0.6); transform:translateX(110%); transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events:all; }
+  .notif.show { transform:translateX(0); }
+  .notif.hide { transform:translateX(110%); transition:transform 0.3s ease; }
+  .notif.success { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.3); color:#6ee7b7; }
+  .notif.error   { background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.3); color:#fca5a5; }
+  .notif.info    { background:rgba(139,92,246,0.12); border-color:rgba(139,92,246,0.3); color:#c4b5fd; }
+  .notif.warning { background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.3); color:#fde68a; }
+
+  /* LAYOUT */
+  .app { display:flex; min-height:100vh; position:relative; z-index:1; }
+
+  /* SIDEBAR */
+  .sidebar { width:250px; flex-shrink:0; background:var(--surface); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:24px 0; position:fixed; top:0; left:0; bottom:0; z-index:100; }
+  .sidebar-brand { display:flex; align-items:center; gap:12px; padding:0 20px 24px; border-bottom:1px solid var(--border); margin-bottom:20px; }
+  .sidebar-brand-icon { width:40px; height:40px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; box-shadow:0 4px 20px rgba(139,92,246,0.3); }
+  .sidebar-brand-name { font-size:17px; font-weight:800; color:var(--text); }
+  .sidebar-brand-role { font-size:10px; color:var(--accent2); font-family:var(--mono); letter-spacing:1px; }
+  .nav-section { padding:0 12px; margin-bottom:4px; }
+  .nav-label { font-size:10px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; font-family:var(--mono); padding:0 8px; margin-bottom:6px; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; font-size:13px; font-weight:600; color:var(--text2); cursor:pointer; transition:all 0.15s; border:1px solid transparent; margin-bottom:2px; }
+  .nav-item:hover { background:rgba(139,92,246,0.08); color:var(--text); }
+  .nav-item.active { background:rgba(139,92,246,0.15); color:var(--accent2); border-color:rgba(139,92,246,0.25); }
+  .nav-icon { font-size:15px; width:20px; text-align:center; }
+  .sidebar-bottom { margin-top:auto; padding:16px 12px 0; border-top:1px solid var(--border); }
+  .sidebar-user { padding:10px 12px; }
+  .sidebar-email { font-family:var(--mono); font-size:11px; color:var(--text2); margin-bottom:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .btn-logout { width:100%; padding:9px; border-radius:8px; cursor:pointer; border:1px solid rgba(239,68,68,0.25); background:rgba(239,68,68,0.07); color:var(--red); font-family:var(--font); font-size:13px; font-weight:600; transition:all 0.2s; }
+  .btn-logout:hover { background:rgba(239,68,68,0.15); }
+
+  /* MAIN */
+  .main { margin-left:250px; flex:1; padding:28px; min-height:100vh; }
+  .page { display:none; }
+  .page.active { display:block; animation:fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+  .page-header { margin-bottom:24px; display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+  .page-title { font-size:24px; font-weight:800; margin-bottom:4px; }
+  .page-sub { font-size:13px; color:var(--text2); font-family:var(--mono); }
+
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+  .stat-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; position:relative; overflow:hidden; transition:border-color 0.2s, transform 0.2s; }
+  .stat-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .stat-card.purple::before { background:linear-gradient(90deg,var(--accent),transparent); }
+  .stat-card.green::before  { background:linear-gradient(90deg,var(--green),transparent); }
+  .stat-card.red::before    { background:linear-gradient(90deg,var(--red),transparent); }
+  .stat-card.blue::before   { background:linear-gradient(90deg,var(--blue),transparent); }
+  .stat-card.yellow::before { background:linear-gradient(90deg,var(--yellow),transparent); }
+  .stat-card.orange::before { background:linear-gradient(90deg,var(--orange),transparent); }
+  .stat-icon { font-size:24px; margin-bottom:12px; }
+  .stat-value { font-size:34px; font-weight:800; line-height:1; margin-bottom:4px; font-family:var(--mono); }
+  .stat-card.purple .stat-value { color:var(--accent2); }
+  .stat-card.green  .stat-value { color:var(--green); }
+  .stat-card.red    .stat-value { color:var(--red); }
+  .stat-card.blue   .stat-value { color:var(--blue); }
+  .stat-card.yellow .stat-value { color:var(--yellow); }
+  .stat-card.orange .stat-value { color:var(--orange); }
+  .stat-label { font-size:12px; color:var(--text2); font-family:var(--mono); }
+
+  /* CARDS */
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:20px; }
+  .card-header { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:10px; }
+  .card-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+
+  /* TABLES */
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { padding:10px 16px; text-align:left; font-family:var(--mono); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); background:var(--surface2); border-bottom:1px solid var(--border); }
+  tbody tr { border-bottom:1px solid rgba(139,92,246,0.05); transition:background 0.1s; }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:rgba(139,92,246,0.04); }
+  tbody td { padding:13px 16px; font-family:var(--mono); font-size:12px; color:var(--text); vertical-align:middle; }
+
+  /* BADGES */
+  .badge { display:inline-flex; align-items:center; gap:5px; font-size:10px; padding:3px 10px; border-radius:20px; font-weight:600; letter-spacing:0.5px; font-family:var(--mono); white-space:nowrap; }
+  .badge-green  { background:rgba(16,185,129,0.1);  color:#6ee7b7; border:1px solid rgba(16,185,129,0.2); }
+  .badge-red    { background:rgba(239,68,68,0.1);   color:#fca5a5; border:1px solid rgba(239,68,68,0.2); }
+  .badge-yellow { background:rgba(245,158,11,0.1);  color:#fde68a; border:1px solid rgba(245,158,11,0.2); }
+  .badge-purple { background:rgba(139,92,246,0.1);  color:#c4b5fd; border:1px solid rgba(139,92,246,0.2); }
+  .badge-blue   { background:rgba(59,130,246,0.1);  color:#93c5fd; border:1px solid rgba(59,130,246,0.2); }
+  .badge-orange { background:rgba(249,115,22,0.1);  color:#fdba74; border:1px solid rgba(249,115,22,0.2); }
+  .badge-muted  { background:rgba(148,163,184,0.08); color:var(--text2); border:1px solid var(--border); }
+  .badge-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+  /* BUTTONS */
+  .btn { font-family:var(--font); font-weight:600; font-size:13px; padding:9px 18px; border-radius:8px; border:none; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:7px; }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:white; box-shadow:0 4px 16px rgba(139,92,246,0.3); }
+  .btn-primary:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 8px 24px rgba(139,92,246,0.4); }
+  .btn-ghost { background:rgba(148,163,184,0.08); color:var(--text2); border:1px solid var(--border); }
+  .btn-ghost:hover { background:rgba(148,163,184,0.14); color:var(--text); }
+  .btn-danger { background:rgba(239,68,68,0.1); color:var(--red); border:1px solid rgba(239,68,68,0.2); }
+  .btn-danger:hover { background:rgba(239,68,68,0.2); }
+  .btn-warning { background:rgba(245,158,11,0.1); color:var(--yellow); border:1px solid rgba(245,158,11,0.2); }
+  .btn-warning:hover { background:rgba(245,158,11,0.2); }
+  .btn-success { background:rgba(16,185,129,0.1); color:var(--green); border:1px solid rgba(16,185,129,0.2); }
+  .btn-success:hover { background:rgba(16,185,129,0.2); }
+  .btn-sm { padding:5px 11px; font-size:11px; }
+
+  /* FORMS */
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; }
+  .form-group.full { grid-column:1/-1; }
+  label { font-size:11px; font-weight:600; color:var(--text2); letter-spacing:0.5px; text-transform:uppercase; font-family:var(--mono); }
+  input, select, textarea { background:var(--surface2); border:1px solid var(--border2); border-radius:8px; padding:10px 14px; font-family:var(--mono); font-size:13px; color:var(--text); outline:none; transition:border-color 0.2s; width:100%; }
+  input:focus, select:focus, textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(139,92,246,0.1); }
+  input::placeholder, textarea::placeholder { color:var(--muted); }
+  select option { background:var(--surface2); }
+  textarea { resize:vertical; min-height:80px; }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(6px); z-index:1000; display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--surface); border:1px solid var(--border2); border-radius:16px; padding:28px; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,0.7); animation:modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
+  .modal-title { font-size:20px; font-weight:800; margin-bottom:6px; display:flex; align-items:center; gap:10px; }
+  .modal-sub { font-size:12px; color:var(--text2); font-family:var(--mono); margin-bottom:24px; }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; padding-top:20px; border-top:1px solid var(--border); }
+  .modal-section { margin-bottom:20px; padding-bottom:20px; border-bottom:1px solid var(--border); }
+  .modal-section:last-of-type { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+  .modal-section-title { font-size:12px; font-weight:700; color:var(--accent2); letter-spacing:1px; text-transform:uppercase; font-family:var(--mono); margin-bottom:14px; }
+
+  /* PLAN SELECTOR */
+  .plan-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:4px; }
+  .plan-btn { padding:10px 8px; border-radius:8px; border:1px solid var(--border2); background:var(--surface2); color:var(--text2); font-family:var(--mono); font-size:11px; font-weight:600; cursor:pointer; transition:all 0.15s; text-align:center; }
+  .plan-btn:hover { border-color:var(--accent); color:var(--accent2); }
+  .plan-btn.selected { background:rgba(139,92,246,0.15); border-color:var(--accent); color:var(--accent2); }
+  .plan-label { font-size:13px; font-weight:700; margin-bottom:2px; }
+  .plan-price { font-size:10px; color:var(--muted); }
+
+  /* SUBSCRIPTION INDICATOR */
+  .sub-bar { height:4px; border-radius:2px; background:var(--surface3); margin-top:6px; overflow:hidden; }
+  .sub-bar-fill { height:100%; border-radius:2px; transition:width 0.3s; }
+  .sub-bar-fill.good    { background:var(--green); }
+  .sub-bar-fill.warning { background:var(--yellow); }
+  .sub-bar-fill.danger  { background:var(--red); }
+  .sub-bar-fill.expired { background:var(--muted); width:100% !important; }
+
+  /* COMPANY CARD GRID */
+  .company-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:16px; }
+  .company-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; transition:all 0.2s; position:relative; overflow:hidden; }
+  .company-card:hover { border-color:var(--border2); transform:translateY(-2px); }
+  .company-card.suspended { border-color:rgba(239,68,68,0.2); opacity:0.8; }
+  .company-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,var(--accent),var(--accent2)); }
+  .company-card.suspended::before { background:linear-gradient(90deg,var(--red),transparent); }
+  .company-card-header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:14px; gap:8px; }
+  .company-card-name { font-size:16px; font-weight:800; margin-bottom:3px; }
+  .company-card-meta { font-size:11px; color:var(--text2); font-family:var(--mono); }
+  .company-card-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px; }
+  .company-stat { background:var(--surface2); border-radius:8px; padding:8px 10px; text-align:center; }
+  .company-stat-val { font-size:18px; font-weight:800; font-family:var(--mono); }
+  .company-stat-label { font-size:10px; color:var(--muted); font-family:var(--mono); }
+  .company-card-actions { display:flex; gap:6px; flex-wrap:wrap; }
+
+  /* FILTERS */
+  .filters { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .filters input, .filters select { width:auto; min-width:130px; padding:8px 12px; font-size:12px; }
+  .search-wrap { position:relative; }
+  .search-wrap input { padding-left:32px; }
+  .search-icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:13px; pointer-events:none; }
+
+  .empty-state { text-align:center; padding:48px; color:var(--muted); font-family:var(--mono); font-size:13px; }
+  .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(139,92,246,0.2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
+  ::-webkit-scrollbar { width:6px; }
+  ::-webkit-scrollbar-thumb { background:var(--muted); border-radius:3px; }
+
+  /* EXPIRY WARNING BANNER */
+  .expiry-soon { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.2); border-radius:10px; padding:12px 16px; font-family:var(--mono); font-size:12px; color:var(--yellow); margin-bottom:16px; display:flex; align-items:center; gap:10px; }
+
+  @media(max-width:768px){
+    .sidebar{transform:translateX(-100%)} .main{margin-left:0;padding:16px}
+    .stats-grid{grid-template-columns:1fr 1fr} .form-grid{grid-template-columns:1fr}
+    .plan-grid{grid-template-columns:repeat(2,1fr)} .company-grid{grid-template-columns:1fr}
+  }
+</style>
 </head>
 <body>
+<div id="notif"></div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">⚡</div>
+      <div><div class="sidebar-brand-name">WorkPulse</div><div class="sidebar-brand-role">SUPER ADMIN</div></div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" data-page="dashboard"><span class="nav-icon">📊</span> Dashboard</div>
+    </div>
+    <div class="nav-section" style="margin-top:12px">
+      <div class="nav-label">Management</div>
+      <div class="nav-item" data-page="companies"><span class="nav-icon">🏢</span> Companies</div>
+      <div class="nav-item" data-page="users"><span class="nav-icon">👥</span> All Users</div>
+      <div class="nav-item" data-page="attendance"><span class="nav-icon">🕐</span> Attendance</div>
+    </div>
+    <div class="nav-section" style="margin-top:12px">
+      <div class="nav-label">System</div>
+      <div class="nav-item" data-page="expiring"><span class="nav-icon">⏳</span> Expiring Soon</div>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-email" id="adminEmail">—</div>
+        <button class="btn-logout" id="logoutBtn">Sign Out</button>
+      </div>
+    </div>
+  </aside>
 
-<h2>Super Admin Panel</h2>
-<p id="welcome"></p>
-<button id="logoutBtn">Logout</button>
+  <main class="main">
 
-<h3>All Users</h3>
-<ul id="usersList"></ul>
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div><div class="page-title">System Overview</div><div class="page-sub" id="dashDate">—</div></div>
+      </div>
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card purple"><div class="stat-icon">🏢</div><div class="stat-value" id="s-companies">—</div><div class="stat-label">Total Companies</div></div>
+        <div class="stat-card green"><div class="stat-icon">✅</div><div class="stat-value" id="s-active">—</div><div class="stat-label">Active Companies</div></div>
+        <div class="stat-card red"><div class="stat-icon">🔴</div><div class="stat-value" id="s-suspended">—</div><div class="stat-label">Suspended</div></div>
+        <div class="stat-card blue"><div class="stat-icon">👥</div><div class="stat-value" id="s-employees">—</div><div class="stat-label">Total Employees</div></div>
+        <div class="stat-card green"><div class="stat-icon">📍</div><div class="stat-value" id="s-present">—</div><div class="stat-label">Present Today</div></div>
+        <div class="stat-card yellow"><div class="stat-icon">⏳</div><div class="stat-value" id="s-expiring">—</div><div class="stat-label">Expiring in 7 Days</div></div>
+      </div>
+      <div id="expiryWarnings"></div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">🏢 All Companies Status</div></div>
+        <table>
+          <thead><tr><th>Company</th><th>Employees</th><th>Present Today</th><th>Subscription</th><th>Status</th></tr></thead>
+          <tbody id="dashCompTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- COMPANIES -->
+    <div class="page" id="page-companies">
+      <div class="page-header">
+        <div><div class="page-title">Companies</div><div class="page-sub">Manage all registered companies</div></div>
+        <button class="btn btn-primary" id="addCompanyBtn">＋ New Company</button>
+      </div>
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-header">
+          <div class="filters">
+            <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="compSearch" placeholder="Search company…"></div>
+            <select id="compStatusFilter"><option value="">All Status</option><option value="active">Active</option><option value="suspended">Suspended</option></select>
+          </div>
+        </div>
+      </div>
+      <div id="companyGrid" class="company-grid"><div class="empty-state"><div class="spinner"></div></div></div>
+    </div>
+
+    <!-- USERS -->
+    <div class="page" id="page-users">
+      <div class="page-header">
+        <div><div class="page-title">All Users</div><div class="page-sub">View and manage users across all companies</div></div>
+        <button class="btn btn-primary" id="addAdminBtn">＋ Create Company Admin</button>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="filters">
+            <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="userSearch" placeholder="Search name…"></div>
+            <select id="userRoleFilter"><option value="">All Roles</option><option value="company_admin">Company Admin</option><option value="employee">Employee</option></select>
+            <select id="userCompFilter"><option value="">All Companies</option></select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="usersTable"><tr><td colspan="6" class="empty-state"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ATTENDANCE -->
+    <div class="page" id="page-attendance">
+      <div class="page-header"><div class="page-title">Attendance Overview</div><div class="page-sub">System-wide attendance records</div></div>
+      <div class="card">
+        <div class="card-header">
+          <div class="filters">
+            <input type="date" id="attFrom">
+            <input type="date" id="attTo">
+            <select id="attCompFilter"><option value="">All Companies</option></select>
+            <button class="btn btn-ghost btn-sm" id="attFilterBtn">Filter</button>
+            <button class="btn btn-ghost btn-sm" id="attExportBtn">⬇ Export CSV</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Employee</th><th>Company</th><th>Date</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
+          <tbody id="attTable"><tr><td colspan="7" class="empty-state"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- EXPIRING SOON -->
+    <div class="page" id="page-expiring">
+      <div class="page-header"><div class="page-title">Expiring Soon</div><div class="page-sub">Companies with subscriptions ending in 30 days</div></div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Company</th><th>Employees</th><th>Subscription Ends</th><th>Days Left</th><th>Actions</th></tr></thead>
+          <tbody id="expiringTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD COMPANY MODAL -->
+<div class="modal-overlay" id="addCompanyModal">
+  <div class="modal">
+    <div class="modal-title">🏢 New Company</div>
+    <div class="modal-sub">Create a new company and its admin account</div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Company Info</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Company Name *</label><input type="text" id="nc-name" placeholder="Acme Corp"></div>
+        <div class="form-group"><label>Seat Limit *</label><input type="number" id="nc-seats" placeholder="10" min="1"></div>
+        <div class="form-group"><label>Contact Person</label><input type="text" id="nc-contact" placeholder="John Doe"></div>
+        <div class="form-group"><label>Contact Email</label><input type="email" id="nc-cemail" placeholder="contact@company.com"></div>
+        <div class="form-group"><label>Contact Phone</label><input type="text" id="nc-phone" placeholder="+880 1234 567890"></div>
+        <div class="form-group full"><label>Notes</label><textarea id="nc-notes" placeholder="Optional notes about this company…"></textarea></div>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Subscription Plan</div>
+      <div class="plan-grid" id="planGrid">
+        <div class="plan-btn" data-days="7"><div class="plan-label">7 Days</div><div class="plan-price">Trial</div></div>
+        <div class="plan-btn" data-days="30"><div class="plan-label">1 Month</div><div class="plan-price">Standard</div></div>
+        <div class="plan-btn selected" data-days="90"><div class="plan-label">3 Months</div><div class="plan-price">Popular</div></div>
+        <div class="plan-btn" data-days="180"><div class="plan-label">6 Months</div><div class="plan-price">Value</div></div>
+        <div class="plan-btn" data-days="365"><div class="plan-label">1 Year</div><div class="plan-price">Best Deal</div></div>
+        <div class="plan-btn" data-days="custom"><div class="plan-label">Custom</div><div class="plan-price">Any Days</div></div>
+      </div>
+      <div id="customDaysWrap" style="display:none;margin-top:10px">
+        <div class="form-group"><label>Custom Days</label><input type="number" id="nc-customdays" placeholder="e.g. 45" min="1"></div>
+      </div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--text2)">
+        Subscription ends: <span id="nc-subPreview" style="color:var(--accent2)">—</span>
+      </div>
+    </div>
+
+    <div class="modal-section">
+      <div class="modal-section-title">Admin Account</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Admin Full Name</label><input type="text" id="nc-aname" placeholder="Admin Name"></div>
+        <div class="form-group"><label>Admin Email *</label><input type="email" id="nc-aemail" placeholder="admin@company.com"></div>
+        <div class="form-group full"><label>Password *</label><input type="text" id="nc-apass" placeholder="Min 6 characters"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelCompanyBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveCompanyBtn">Create Company</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDIT COMPANY MODAL -->
+<div class="modal-overlay" id="editCompanyModal">
+  <div class="modal">
+    <div class="modal-title">✏️ Edit Company</div>
+    <div class="modal-sub">Update company information and subscription</div>
+    <input type="hidden" id="ec-id">
+    <div class="modal-section">
+      <div class="modal-section-title">Company Info</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Company Name *</label><input type="text" id="ec-name"></div>
+        <div class="form-group"><label>Seat Limit *</label><input type="number" id="ec-seats" min="1"></div>
+        <div class="form-group"><label>Contact Person</label><input type="text" id="ec-contact"></div>
+        <div class="form-group"><label>Contact Email</label><input type="email" id="ec-cemail"></div>
+        <div class="form-group"><label>Contact Phone</label><input type="text" id="ec-phone"></div>
+        <div class="form-group full"><label>Notes</label><textarea id="ec-notes"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-section">
+      <div class="modal-section-title">Extend Subscription</div>
+      <div class="plan-grid" id="editPlanGrid">
+        <div class="plan-btn" data-days="7"><div class="plan-label">+7 Days</div><div class="plan-price">Trial</div></div>
+        <div class="plan-btn" data-days="30"><div class="plan-label">+1 Month</div><div class="plan-price">Standard</div></div>
+        <div class="plan-btn" data-days="90"><div class="plan-label">+3 Months</div><div class="plan-price">Popular</div></div>
+        <div class="plan-btn" data-days="180"><div class="plan-label">+6 Months</div><div class="plan-price">Value</div></div>
+        <div class="plan-btn" data-days="365"><div class="plan-label">+1 Year</div><div class="plan-price">Best Deal</div></div>
+        <div class="plan-btn" data-days="custom"><div class="plan-label">Custom</div><div class="plan-price">Any Days</div></div>
+      </div>
+      <div id="editCustomDaysWrap" style="display:none;margin-top:10px">
+        <div class="form-group"><label>Custom Days to Add</label><input type="number" id="ec-customdays" placeholder="e.g. 45" min="1"></div>
+      </div>
+      <div style="margin-top:10px;font-family:var(--mono);font-size:12px;color:var(--text2)">
+        Current expiry: <span id="ec-currentExpiry" style="color:var(--accent2)">—</span><br>
+        New expiry after extension: <span id="ec-newExpiry" style="color:var(--green)">Select a plan</span>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelEditCompanyBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveEditCompanyBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD ADMIN MODAL -->
+<div class="modal-overlay" id="addAdminModal">
+  <div class="modal">
+    <div class="modal-title">👤 Create Company Admin</div>
+    <div class="modal-sub">Assign an admin to an existing company</div>
+    <div class="form-grid">
+      <div class="form-group"><label>Full Name</label><input type="text" id="na-name" placeholder="Admin Name"></div>
+      <div class="form-group"><label>Company *</label><select id="na-company"><option value="">Select company…</option></select></div>
+      <div class="form-group"><label>Email *</label><input type="email" id="na-email" placeholder="admin@company.com"></div>
+      <div class="form-group"><label>Password *</label><input type="text" id="na-pass" placeholder="Min 6 characters"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelAdminBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveAdminBtn">Create Admin</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
-  import { checkSession, logoutUser, supabase } from "./js/auth.js";
+import { checkSession, logoutUser, supabase } from "./js/auth.js";
 
-  const user = await checkSession(); // get logged-in user
+const EDGE_URL = "https://nciahmkjmpowidzauzam.supabase.co/functions/v1/create-employee";
 
-  // Verify super_admin role
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function notify(msg, type="info") {
+  const icons = {success:"✓",error:"✕",info:"ℹ",warning:"⚠"};
+  const c = document.getElementById("notif");
+  const el = document.createElement("div");
+  el.className = "notif "+type;
+  el.innerHTML = "<span>"+icons[type]+"</span><span>"+msg+"</span>";
+  c.appendChild(el);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("show")));
+  setTimeout(()=>{el.classList.add("hide");el.addEventListener("transitionend",()=>el.remove(),{once:true});},4000);
+}
 
-  if (profile.role !== "super_admin") {
-    window.location.href = "dashboard.html";
-  }
+function bdTime(t) {
+  if (!t) return "—";
+  const s = t.includes("Z")?t:t.replace(" ","T")+"Z";
+  const bd = new Date(new Date(s).getTime()+6*60*60*1000);
+  let h=bd.getUTCHours(), m=String(bd.getUTCMinutes()).padStart(2,"0"), sec=String(bd.getUTCSeconds()).padStart(2,"0");
+  const ap=h>=12?"PM":"AM"; h=h%12||12;
+  return String(h).padStart(2,"0")+":"+m+":"+sec+" "+ap;
+}
+function bdDate(d) {
+  if (!d) return "—";
+  const [y,mo,day]=d.split("-").map(Number);
+  return new Date(y,mo-1,day).toLocaleDateString("en-US",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
+}
+function dur(a,b) {
+  if (!a||!b) return "—";
+  const sa=a.includes("Z")?a:a.replace(" ","T")+"Z";
+  const sb=b.includes("Z")?b:b.replace(" ","T")+"Z";
+  const m=Math.floor((new Date(sb)-new Date(sa))/60000);
+  return m<0?"—":Math.floor(m/60)+"h "+m%60+"m";
+}
+function todayBD() { return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"}); }
+function daysLeft(endsAt) {
+  if (!endsAt) return null;
+  const diff = Math.ceil((new Date(endsAt)-new Date())/(1000*60*60*24));
+  return diff;
+}
+function subBadge(endsAt, status) {
+  if (status==="suspended") return "<span class='badge badge-red'><span class='badge-dot'></span>Suspended</span>";
+  if (!endsAt) return "<span class='badge badge-muted'>No Sub</span>";
+  const d = daysLeft(endsAt);
+  if (d < 0)  return "<span class='badge badge-red'><span class='badge-dot'></span>Expired</span>";
+  if (d <= 7) return "<span class='badge badge-yellow'><span class='badge-dot'></span>"+d+"d left</span>";
+  if (d <= 30) return "<span class='badge badge-orange'>"+d+"d left</span>";
+  return "<span class='badge badge-green'><span class='badge-dot'></span>"+d+"d left</span>";
+}
+function fmtDate(dt) {
+  if (!dt) return "—";
+  return new Date(dt).toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"});
+}
+function addDays(fromDate, days) {
+  const d = fromDate ? new Date(fromDate) : new Date();
+  if (isNaN(d.getTime()) || d < new Date()) { const n=new Date(); n.setDate(n.getDate()+days); return n.toISOString(); }
+  d.setDate(d.getDate()+days);
+  return d.toISOString();
+}
 
-  document.getElementById("welcome").innerText = `Welcome, ${user.email} (Super Admin)`;
-  document.getElementById("logoutBtn").addEventListener("click", logoutUser);
+// ── NAV ───────────────────────────────────────────────────────────────────
+document.querySelectorAll(".nav-item").forEach(item=>{
+  item.addEventListener("click",()=>{
+    document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    item.classList.add("active");
+    document.getElementById("page-"+item.dataset.page).classList.add("active");
+    const p=item.dataset.page;
+    if(p==="companies")  loadCompanies();
+    if(p==="users")      loadUsers();
+    if(p==="attendance") loadAttendancePage();
+    if(p==="expiring")   loadExpiring();
+  });
+});
 
-  // Load all users
-  const { data: users, error } = await supabase
-    .from("profiles")
-    .select("id, role, company_id");
+// ── INIT ──────────────────────────────────────────────────────────────────
+const user = await checkSession();
+if (!user) throw new Error("no session");
 
-  const usersListEl = document.getElementById("usersList");
+const {data:profile} = await supabase.from("profiles").select("role").eq("id",user.id).single();
+if (!profile || profile.role !== "super_admin") { window.location.href="dashboard.html"; }
 
-  if (error) {
-    usersListEl.innerHTML = "<li>Error loading users</li>";
-  } else {
-    users.forEach(u => {
-      const li = document.createElement("li");
-      li.textContent = `ID: ${u.id} | Role: ${u.role} | Company: ${u.company_id || "-"}`;
-      usersListEl.appendChild(li);
+document.getElementById("adminEmail").textContent = user.email;
+document.getElementById("dashDate").textContent = new Date().toLocaleDateString("en-US",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Dhaka"});
+document.getElementById("logoutBtn").addEventListener("click",()=>{notify("Signing out…","info");setTimeout(logoutUser,700);});
+
+let allCompanies = [];
+let allUsers     = [];
+
+// ── FETCH HELPERS ─────────────────────────────────────────────────────────
+async function fetchCompanies() {
+  const {data,error} = await supabase.from("companies").select("*").order("created_at",{ascending:false});
+  if (error) { notify("Error loading companies: "+error.message,"error"); return []; }
+  return data||[];
+}
+async function fetchUsers() {
+  const {data,error} = await supabase.from("profiles").select("*").neq("role","super_admin");
+  if (error) { notify("Error loading users: "+error.message,"error"); return []; }
+  return data||[];
+}
+async function getToken() {
+  const {data} = await supabase.auth.getSession();
+  return data?.session?.access_token;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const [companies, users] = await Promise.all([fetchCompanies(), fetchUsers()]);
+  allCompanies = companies; allUsers = users;
+
+  const active    = companies.filter(c=>c.status!=="suspended");
+  const suspended = companies.filter(c=>c.status==="suspended");
+  const expiring  = companies.filter(c=>{ const d=daysLeft(c.subscription_ends_at); return d!==null&&d>=0&&d<=7&&c.status!=="suspended"; });
+  const employees = users.filter(u=>u.role==="employee");
+
+  const today = todayBD();
+  const {data:att} = await supabase.from("attendance").select("user_id").eq("date",today);
+  const presentCount = att?.length||0;
+
+  document.getElementById("s-companies").textContent = companies.length;
+  document.getElementById("s-active").textContent    = active.length;
+  document.getElementById("s-suspended").textContent = suspended.length;
+  document.getElementById("s-employees").textContent = employees.length;
+  document.getElementById("s-present").textContent   = presentCount;
+  document.getElementById("s-expiring").textContent  = expiring.length;
+
+  // Expiry warnings
+  const warnEl = document.getElementById("expiryWarnings");
+  warnEl.innerHTML = expiring.map(c=>`<div class="expiry-soon">⚠️ <strong>${c.name}</strong> subscription expires in ${daysLeft(c.subscription_ends_at)} days (${fmtDate(c.subscription_ends_at)})</div>`).join("");
+
+  // Company table
+  const tbody = document.getElementById("dashCompTable");
+  if (!companies.length) { tbody.innerHTML="<tr><td colspan='5' class='empty-state'>No companies found</td></tr>"; return; }
+
+  // Get per-company employee counts and today attendance
+  const compStats = {};
+  companies.forEach(c=>{ compStats[c.id]={emps:0,present:0}; });
+  users.forEach(u=>{ if(u.company_id&&compStats[u.company_id]) compStats[u.company_id].emps++; });
+  if (att) att.forEach(a=>{ const u=users.find(x=>x.id===a.user_id); if(u?.company_id&&compStats[u.company_id]) compStats[u.company_id].present++; });
+
+  tbody.innerHTML = companies.map(c=>`<tr>
+    <td><strong>${c.name}</strong></td>
+    <td>${compStats[c.id]?.emps||0}</td>
+    <td>${compStats[c.id]?.present||0}</td>
+    <td>${subBadge(c.subscription_ends_at,c.status)}</td>
+    <td>${c.status==="suspended"?"<span class='badge badge-red'><span class='badge-dot'></span>Suspended</span>":"<span class='badge badge-green'><span class='badge-dot'></span>Active</span>"}</td>
+  </tr>`).join("");
+}
+loadDashboard();
+
+// ── COMPANIES PAGE ────────────────────────────────────────────────────────
+async function loadCompanies() {
+  const companies = await fetchCompanies();
+  allCompanies = companies;
+  if (allUsers.length===0) allUsers = await fetchUsers();
+  renderCompanyGrid(companies);
+  populateCompanyFilters(companies);
+}
+
+function renderCompanyGrid(companies) {
+  const grid = document.getElementById("companyGrid");
+  if (!companies.length) { grid.innerHTML="<div class='empty-state'>No companies found</div>"; return; }
+
+  const compStats = {};
+  companies.forEach(c=>{ compStats[c.id]={emps:0}; });
+  allUsers.forEach(u=>{ if(u.company_id&&compStats[u.company_id]) compStats[u.company_id].emps++; });
+
+  grid.innerHTML = companies.map(c=>{
+    const suspended = c.status==="suspended";
+    const dl = daysLeft(c.subscription_ends_at);
+    const subText = !c.subscription_ends_at ? "No subscription set" : (dl<0?"Expired "+fmtDate(c.subscription_ends_at):"Expires "+fmtDate(c.subscription_ends_at)+" ("+dl+"d)");
+    const barPct = !c.subscription_ends_at||dl===null ? 0 : Math.max(0,Math.min(100,Math.round(dl/365*100)));
+    const barClass = dl===null||!c.subscription_ends_at ? "expired" : dl<0?"expired":dl<=7?"danger":dl<=30?"warning":"good";
+    return `<div class="company-card ${suspended?"suspended":""}">
+      <div class="company-card-header">
+        <div>
+          <div class="company-card-name">${c.name}</div>
+          <div class="company-card-meta">${c.contact_person||"—"} · ${c.contact_email||"—"}</div>
+        </div>
+        ${suspended?"<span class='badge badge-red'>Suspended</span>":"<span class='badge badge-green'>Active</span>"}
+      </div>
+      <div class="company-card-stats">
+        <div class="company-stat"><div class="company-stat-val" style="color:var(--accent2)">${compStats[c.id]?.emps||0}</div><div class="company-stat-label">Employees</div></div>
+        <div class="company-stat"><div class="company-stat-val" style="color:var(--blue)">${c.seat_limit||"—"}</div><div class="company-stat-label">Seat Limit</div></div>
+        <div class="company-stat"><div class="company-stat-val" style="color:${dl!==null&&dl>=0&&!suspended?'var(--green)':'var(--red)'}">${dl!==null?Math.max(0,dl)+"d":"—"}</div><div class="company-stat-label">Days Left</div></div>
+      </div>
+      <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-bottom:8px">${subText}</div>
+      <div class="sub-bar"><div class="sub-bar-fill ${barClass}" style="width:${barPct}%"></div></div>
+      ${c.notes?`<div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">${c.notes}</div>`:""}
+      <div class="company-card-actions" style="margin-top:14px">
+        <button class="btn btn-ghost btn-sm" onclick="editCompany('${c.id}')">✏️ Edit</button>
+        ${suspended
+          ? `<button class="btn btn-success btn-sm" onclick="toggleCompany('${c.id}','active')">✅ Activate</button>`
+          : `<button class="btn btn-warning btn-sm" onclick="toggleCompany('${c.id}','suspended')">⏸ Suspend</button>`}
+        <button class="btn btn-danger btn-sm" onclick="deleteCompany('${c.id}','${c.name}')">🗑 Delete</button>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+function populateCompanyFilters(companies) {
+  const attSel = document.getElementById("attCompFilter");
+  const userSel = document.getElementById("userCompFilter");
+  const adminSel = document.getElementById("na-company");
+  [attSel,userSel,adminSel].forEach(sel=>{
+    const first = sel.options[0].text;
+    sel.innerHTML = `<option value="">${first}</option>`;
+    companies.forEach(c=>{ sel.innerHTML += `<option value="${c.id}">${c.name}</option>`; });
+  });
+}
+
+document.getElementById("compSearch").addEventListener("input",function(){
+  const q=this.value.toLowerCase(), f=document.getElementById("compStatusFilter").value;
+  renderCompanyGrid(allCompanies.filter(c=>(c.name||"").toLowerCase().includes(q)&&(f===""||c.status===f)));
+});
+document.getElementById("compStatusFilter").addEventListener("change",function(){
+  const q=document.getElementById("compSearch").value.toLowerCase(), f=this.value;
+  renderCompanyGrid(allCompanies.filter(c=>(c.name||"").toLowerCase().includes(q)&&(f===""||c.status===f)));
+});
+
+window.toggleCompany = async (id, newStatus) => {
+  const updates = {status:newStatus};
+  if (newStatus==="suspended") updates.suspended_at = new Date().toISOString();
+  else updates.suspended_at = null;
+  const {error} = await supabase.from("companies").update(updates).eq("id",id);
+  if (error) { notify("Error: "+error.message,"error"); return; }
+  notify(newStatus==="suspended"?"Company suspended":"Company activated", newStatus==="suspended"?"warning":"success");
+  loadCompanies(); loadDashboard();
+};
+
+window.deleteCompany = async (id, name) => {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  const {error} = await supabase.from("companies").delete().eq("id",id);
+  if (error) { notify("Error: "+error.message,"error"); return; }
+  notify("Company deleted","success");
+  loadCompanies(); loadDashboard();
+};
+
+window.editCompany = (id) => {
+  const c = allCompanies.find(x=>x.id===id);
+  if (!c) return;
+  document.getElementById("ec-id").value    = c.id;
+  document.getElementById("ec-name").value  = c.name||"";
+  document.getElementById("ec-seats").value = c.seat_limit||"";
+  document.getElementById("ec-contact").value = c.contact_person||"";
+  document.getElementById("ec-cemail").value  = c.contact_email||"";
+  document.getElementById("ec-phone").value   = c.contact_phone||"";
+  document.getElementById("ec-notes").value   = c.notes||"";
+  document.getElementById("ec-currentExpiry").textContent = c.subscription_ends_at ? fmtDate(c.subscription_ends_at) : "Not set";
+  document.getElementById("ec-newExpiry").textContent = "Select a plan to extend";
+  editSelectedDays = null;
+  document.querySelectorAll("#editPlanGrid .plan-btn").forEach(b=>b.classList.remove("selected"));
+  document.getElementById("editCustomDaysWrap").style.display="none";
+  document.getElementById("editCompanyModal").classList.add("open");
+};
+
+// ── ADD COMPANY MODAL ─────────────────────────────────────────────────────
+let selectedDays = 90;
+let editSelectedDays = null;
+
+document.getElementById("addCompanyBtn").addEventListener("click",()=>{
+  selectedDays=90;
+  document.querySelectorAll("#planGrid .plan-btn").forEach(b=>b.classList.toggle("selected",b.dataset.days==="90"));
+  document.getElementById("customDaysWrap").style.display="none";
+  updateSubPreview();
+  document.getElementById("addCompanyModal").classList.add("open");
+});
+document.getElementById("cancelCompanyBtn").addEventListener("click",()=>document.getElementById("addCompanyModal").classList.remove("open"));
+
+document.querySelectorAll("#planGrid .plan-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("#planGrid .plan-btn").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");
+    if (btn.dataset.days==="custom") { selectedDays="custom"; document.getElementById("customDaysWrap").style.display="block"; }
+    else { selectedDays=parseInt(btn.dataset.days); document.getElementById("customDaysWrap").style.display="none"; }
+    updateSubPreview();
+  });
+});
+document.getElementById("nc-customdays").addEventListener("input",updateSubPreview);
+function updateSubPreview() {
+  const days = selectedDays==="custom" ? parseInt(document.getElementById("nc-customdays").value)||0 : selectedDays;
+  if (!days) { document.getElementById("nc-subPreview").textContent="—"; return; }
+  const d = new Date(); d.setDate(d.getDate()+days);
+  document.getElementById("nc-subPreview").textContent = d.toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})+" ("+days+" days)";
+}
+updateSubPreview();
+
+document.getElementById("saveCompanyBtn").addEventListener("click",async()=>{
+  const name    = document.getElementById("nc-name").value.trim();
+  const seats   = parseInt(document.getElementById("nc-seats").value)||0;
+  const contact = document.getElementById("nc-contact").value.trim();
+  const cemail  = document.getElementById("nc-cemail").value.trim();
+  const phone   = document.getElementById("nc-phone").value.trim();
+  const notes   = document.getElementById("nc-notes").value.trim();
+  const aemail  = document.getElementById("nc-aemail").value.trim();
+  const apass   = document.getElementById("nc-apass").value.trim();
+  const aname   = document.getElementById("nc-aname").value.trim();
+  const days    = selectedDays==="custom" ? parseInt(document.getElementById("nc-customdays").value)||0 : selectedDays;
+
+  if (!name)   { notify("Company name required","error"); return; }
+  if (!seats)  { notify("Seat limit required","error"); return; }
+  if (!aemail) { notify("Admin email required","error"); return; }
+  if (!apass||apass.length<6) { notify("Admin password must be at least 6 characters","error"); return; }
+  if (!days)   { notify("Select a subscription plan","error"); return; }
+
+  const btn = document.getElementById("saveCompanyBtn");
+  btn.disabled=true; btn.textContent="Creating…";
+
+  try {
+    // 1. Create company
+    const subEnds = addDays(null, days);
+    const {data:co, error:coErr} = await supabase.from("companies").insert([{
+      name, seat_limit:seats, status:"active",
+      subscription_ends_at:subEnds,
+      contact_person:contact||null, contact_email:cemail||null,
+      contact_phone:phone||null, notes:notes||null,
+      office_start_time:"09:00"
+    }]).select().single();
+    if (coErr) { notify("Company creation failed: "+coErr.message,"error"); btn.disabled=false; btn.textContent="Create Company"; return; }
+
+    // 2. Create admin via edge function
+    const token = await getToken();
+    const res = await fetch(EDGE_URL,{
+      method:"POST",
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+      body:JSON.stringify({email:aemail,password:apass,full_name:aname||null,role:"company_admin",company_id:co.id})
     });
-  }
-</script>
+    const result = await res.json();
+    if (result.error) { notify("Admin creation failed: "+result.error,"error"); btn.disabled=false; btn.textContent="Create Company"; return; }
 
+    notify("Company '"+name+"' created with admin account!","success");
+    document.getElementById("addCompanyModal").classList.remove("open");
+    ["nc-name","nc-seats","nc-contact","nc-cemail","nc-phone","nc-notes","nc-aname","nc-aemail","nc-apass","nc-customdays"].forEach(id=>document.getElementById(id).value="");
+    loadCompanies(); loadDashboard();
+  } catch(err) { notify("Error: "+err.message,"error"); }
+
+  btn.disabled=false; btn.textContent="Create Company";
+});
+
+// ── EDIT COMPANY ──────────────────────────────────────────────────────────
+document.querySelectorAll("#editPlanGrid .plan-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll("#editPlanGrid .plan-btn").forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");
+    if (btn.dataset.days==="custom") { editSelectedDays="custom"; document.getElementById("editCustomDaysWrap").style.display="block"; }
+    else { editSelectedDays=parseInt(btn.dataset.days); document.getElementById("editCustomDaysWrap").style.display="none"; }
+    updateEditPreview();
+  });
+});
+document.getElementById("ec-customdays").addEventListener("input",updateEditPreview);
+function updateEditPreview() {
+  const days = editSelectedDays==="custom" ? parseInt(document.getElementById("ec-customdays").value)||0 : editSelectedDays;
+  if (!days) { document.getElementById("ec-newExpiry").textContent="Select a plan to extend"; return; }
+  const id = document.getElementById("ec-id").value;
+  const co = allCompanies.find(c=>c.id===id);
+  const newEnd = addDays(co?.subscription_ends_at, days);
+  document.getElementById("ec-newExpiry").textContent = new Date(newEnd).toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})+" (+"+days+" days)";
+}
+
+document.getElementById("cancelEditCompanyBtn").addEventListener("click",()=>document.getElementById("editCompanyModal").classList.remove("open"));
+document.getElementById("saveEditCompanyBtn").addEventListener("click",async()=>{
+  const id     = document.getElementById("ec-id").value;
+  const name   = document.getElementById("ec-name").value.trim();
+  const seats  = parseInt(document.getElementById("ec-seats").value)||0;
+  const contact= document.getElementById("ec-contact").value.trim();
+  const cemail = document.getElementById("ec-cemail").value.trim();
+  const phone  = document.getElementById("ec-phone").value.trim();
+  const notes  = document.getElementById("ec-notes").value.trim();
+  const days   = editSelectedDays==="custom" ? parseInt(document.getElementById("ec-customdays").value)||0 : editSelectedDays;
+
+  if (!name)  { notify("Company name required","error"); return; }
+  if (!seats) { notify("Seat limit required","error"); return; }
+
+  const co = allCompanies.find(c=>c.id===id);
+  const updates = { name, seat_limit:seats, contact_person:contact||null, contact_email:cemail||null, contact_phone:phone||null, notes:notes||null };
+  if (days) updates.subscription_ends_at = addDays(co?.subscription_ends_at, days);
+
+  const btn = document.getElementById("saveEditCompanyBtn");
+  btn.disabled=true; btn.textContent="Saving…";
+
+  const {error} = await supabase.from("companies").update(updates).eq("id",id);
+  if (error) { notify("Error: "+error.message,"error"); btn.disabled=false; btn.textContent="Save Changes"; return; }
+
+  notify("Company updated!","success");
+  document.getElementById("editCompanyModal").classList.remove("open");
+  loadCompanies(); loadDashboard();
+  btn.disabled=false; btn.textContent="Save Changes";
+});
+
+// ── USERS PAGE ────────────────────────────────────────────────────────────
+async function loadUsers() {
+  const [users, companies] = await Promise.all([fetchUsers(), allCompanies.length?Promise.resolve(allCompanies):fetchCompanies()]);
+  allUsers = users; allCompanies = companies;
+  populateCompanyFilters(companies);
+  renderUsersTable(users);
+}
+
+function renderUsersTable(users) {
+  const tbody = document.getElementById("usersTable");
+  if (!users.length) { tbody.innerHTML="<tr><td colspan='6' class='empty-state'>No users found</td></tr>"; return; }
+  tbody.innerHTML = users.map(u=>{
+    const co = allCompanies.find(c=>c.id===u.company_id);
+    const active = u.is_active!==false;
+    const joined = u.created_at?new Date(u.created_at).toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}):"—";
+    return `<tr>
+      <td>${u.full_name||"—"}</td>
+      <td>${u.role==="company_admin"?"<span class='badge badge-purple'>Admin</span>":"<span class='badge badge-muted'>Employee</span>"}</td>
+      <td>${co?"<span class='badge badge-blue'>"+co.name+"</span>":"<span class='badge badge-muted'>—</span>"}</td>
+      <td>${active?"<span class='badge badge-green'><span class='badge-dot'></span>Active</span>":"<span class='badge badge-red'><span class='badge-dot'></span>Inactive</span>"}</td>
+      <td>${joined}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}')">Edit</button>
+        <button class="btn ${active?"btn-danger":"btn-success"} btn-sm" onclick="toggleUser('${u.id}',${active})">${active?"Deactivate":"Activate"}</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+document.getElementById("userSearch").addEventListener("input",filterUsers);
+document.getElementById("userRoleFilter").addEventListener("change",filterUsers);
+document.getElementById("userCompFilter").addEventListener("change",filterUsers);
+function filterUsers() {
+  const q=document.getElementById("userSearch").value.toLowerCase();
+  const r=document.getElementById("userRoleFilter").value;
+  const c=document.getElementById("userCompFilter").value;
+  renderUsersTable(allUsers.filter(u=>(u.full_name||"").toLowerCase().includes(q)&&(r===""||u.role===r)&&(c===""||u.company_id===c)));
+}
+
+window.toggleUser = async(id,active)=>{
+  const{error}=await supabase.from("profiles").update({is_active:!active}).eq("id",id);
+  if(error){notify("Error: "+error.message,"error");return;}
+  notify(active?"User deactivated":"User activated","success"); loadUsers();
+};
+window.editUser = async(id)=>{
+  const u=allUsers.find(x=>x.id===id);
+  const n=prompt("Full name:",u?.full_name||""); if(n===null)return;
+  const{error}=await supabase.from("profiles").update({full_name:n}).eq("id",id);
+  if(error){notify("Error: "+error.message,"error");return;}
+  notify("User updated","success"); loadUsers();
+};
+
+// ── ADD ADMIN MODAL ───────────────────────────────────────────────────────
+document.getElementById("addAdminBtn").addEventListener("click",()=>{
+  if (!allCompanies.length) loadCompanies();
+  document.getElementById("addAdminModal").classList.add("open");
+});
+document.getElementById("cancelAdminBtn").addEventListener("click",()=>document.getElementById("addAdminModal").classList.remove("open"));
+document.getElementById("saveAdminBtn").addEventListener("click",async()=>{
+  const name    = document.getElementById("na-name").value.trim();
+  const coId    = document.getElementById("na-company").value;
+  const email   = document.getElementById("na-email").value.trim();
+  const pass    = document.getElementById("na-pass").value.trim();
+  if (!coId)  { notify("Select a company","error"); return; }
+  if (!email) { notify("Email required","error"); return; }
+  if (!pass||pass.length<6) { notify("Password min 6 characters","error"); return; }
+
+  const btn=document.getElementById("saveAdminBtn");
+  btn.disabled=true; btn.textContent="Creating…";
+  try {
+    const token=await getToken();
+    const res=await fetch(EDGE_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({email,password:pass,full_name:name||null,role:"company_admin",company_id:coId})});
+    const result=await res.json();
+    if(result.error){notify("Error: "+result.error,"error");}
+    else{notify("Admin "+email+" created!","success");document.getElementById("addAdminModal").classList.remove("open");["na-name","na-email","na-pass"].forEach(id=>document.getElementById(id).value="");loadUsers();}
+  } catch(err){notify("Error: "+err.message,"error");}
+  btn.disabled=false; btn.textContent="Create Admin";
+});
+
+// ── ATTENDANCE PAGE ───────────────────────────────────────────────────────
+async function loadAttendancePage() {
+  if (!allCompanies.length) { allCompanies=await fetchCompanies(); populateCompanyFilters(allCompanies); }
+  const to=todayBD(), from=new Date(Date.now()-6*24*60*60*1000).toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"});
+  document.getElementById("attFrom").value=from; document.getElementById("attTo").value=to;
+  fetchAttendance(from,to,"");
+}
+
+async function fetchAttendance(from,to,coId) {
+  const tbody=document.getElementById("attTable");
+  tbody.innerHTML="<tr><td colspan='7' class='empty-state'><div class='spinner'></div></td></tr>";
+  if (!allUsers.length) allUsers=await fetchUsers();
+
+  let empIds = allUsers.map(u=>u.id);
+  if (coId) empIds = allUsers.filter(u=>u.company_id===coId).map(u=>u.id);
+  if (!empIds.length) { tbody.innerHTML="<tr><td colspan='7' class='empty-state'>No employees found</td></tr>"; return; }
+
+  const {data,error}=await supabase.from("attendance").select("*").in("user_id",empIds).gte("date",from).lte("date",to).order("date",{ascending:false}).limit(200);
+  if(error){notify("Error: "+error.message,"error");return;}
+  if(!data?.length){tbody.innerHTML="<tr><td colspan='7' class='empty-state'>No records found</td></tr>";return;}
+
+  tbody.innerHTML=data.map(a=>{
+    const u=allUsers.find(x=>x.id===a.user_id);
+    const co=allCompanies.find(c=>c.id===u?.company_id);
+    return `<tr>
+      <td>${u?.full_name||a.user_id.substring(0,8)+"…"}</td>
+      <td>${co?"<span class='badge badge-blue'>"+co.name+"</span>":"—"}</td>
+      <td>${bdDate(a.date)}</td><td>${bdTime(a.in_time)}</td><td>${bdTime(a.out_time)}</td><td>${dur(a.in_time,a.out_time)}</td>
+      <td><span class='badge badge-green'><span class='badge-dot'></span>Present</span></td>
+    </tr>`;
+  }).join("");
+  window._attData=data;
+}
+
+document.getElementById("attFilterBtn").addEventListener("click",()=>fetchAttendance(document.getElementById("attFrom").value,document.getElementById("attTo").value,document.getElementById("attCompFilter").value));
+document.getElementById("attExportBtn").addEventListener("click",()=>{
+  if(!window._attData?.length){notify("No data","info");return;}
+  exportCSV(window._attData.map(a=>{const u=allUsers.find(x=>x.id===a.user_id);const co=allCompanies.find(c=>c.id===u?.company_id);return{Employee:u?.full_name||a.user_id,Company:co?.name||"—",Date:a.date,"In Time":bdTime(a.in_time),"Out Time":bdTime(a.out_time),Duration:dur(a.in_time,a.out_time)};}), "system_attendance");
+});
+
+// ── EXPIRING SOON ─────────────────────────────────────────────────────────
+async function loadExpiring() {
+  if (!allCompanies.length) allCompanies=await fetchCompanies();
+  if (!allUsers.length) allUsers=await fetchUsers();
+
+  const expiring = allCompanies.filter(c=>{
+    const d=daysLeft(c.subscription_ends_at);
+    return d!==null&&d<=30&&c.status!=="suspended";
+  }).sort((a,b)=>daysLeft(a.subscription_ends_at)-daysLeft(b.subscription_ends_at));
+
+  const tbody=document.getElementById("expiringTable");
+  if(!expiring.length){tbody.innerHTML="<tr><td colspan='5' class='empty-state'>No companies expiring in the next 30 days 🎉</td></tr>";return;}
+
+  tbody.innerHTML=expiring.map(c=>{
+    const dl=daysLeft(c.subscription_ends_at);
+    const emps=allUsers.filter(u=>u.company_id===c.id).length;
+    const dlBadge=dl<0?"<span class='badge badge-red'>Expired</span>":dl<=7?"<span class='badge badge-red'>"+dl+" days</span>":"<span class='badge badge-yellow'>"+dl+" days</span>";
+    return `<tr>
+      <td><strong>${c.name}</strong></td>
+      <td>${emps}</td>
+      <td>${fmtDate(c.subscription_ends_at)}</td>
+      <td>${dlBadge}</td>
+      <td style="display:flex;gap:5px">
+        <button class="btn btn-success btn-sm" onclick="editCompany('${c.id}')">🔄 Renew</button>
+        <button class="btn btn-warning btn-sm" onclick="toggleCompany('${c.id}','suspended')">⏸ Suspend</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+// ── CSV EXPORT ────────────────────────────────────────────────────────────
+function exportCSV(rows,filename) {
+  if(!rows.length)return;
+  const h=Object.keys(rows[0]);
+  const csv=[h.join(","),...rows.map(r=>h.map(k=>'"'+(r[k]||"")+'"').join(","))].join("\n");
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
+  a.download=filename+"_"+todayBD()+".csv"; a.click();
+  notify("CSV exported!","success");
+}
+</script>
 </body>
 </html>
