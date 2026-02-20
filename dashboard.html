@@ -403,12 +403,16 @@ async function markIn(userId) {
     return false;
   }
 
-  const { error: insertErr } = await supabase.from("attendance").insert([{
-    user_id: userId,
-    date,
-    in_time: now.toISOString(),
-    status: "Present"
-  }]);
+ // Get company_id from profile
+const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", userId).single();
+
+const { error: insertErr } = await supabase.from("attendance").insert([{
+  user_id: userId,
+  date,
+  in_time: now.toISOString(),
+  status: "Present",
+  company_id: prof?.company_id || null
+}]);
 
   if (insertErr) { notify("Insert failed: " + insertErr.message, "error"); return false; }
 
@@ -485,6 +489,7 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
 </script>
 </body>
 </html>
+
 
 
 
