@@ -2,7 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#f97316">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WorkPulse Admin">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>WorkPulse — Company Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -122,10 +128,44 @@
     .sidebar{transform:translateX(-100%)} .main{margin-left:0;padding:16px}
     .stats-grid{grid-template-columns:1fr 1fr} .form-grid{grid-template-columns:1fr} .settings-grid{grid-template-columns:1fr}
   }
+
+  /* ── HAMBURGER & MOBILE SIDEBAR ── */
+  .hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); flex-shrink:0; position:fixed; top:14px; left:14px; z-index:200; }
+  .hamburger span { display:block; width:20px; height:2px; background:var(--text2); border-radius:2px; transition:all 0.3s; }
+  .sidebar-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); backdrop-filter:blur(3px); z-index:99; }
+  .sidebar-overlay.open { display:block; }
+  .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  @media(max-width:768px){
+    .hamburger { display:flex; }
+    .sidebar { transform:translateX(-100%); transition:transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .sidebar.open { transform:translateX(0); box-shadow:8px 0 40px rgba(0,0,0,0.5); }
+    .main { margin-left:0 !important; padding:14px !important; padding-top:60px !important; }
+    .stats-grid { grid-template-columns:1fr 1fr !important; }
+    .today-grid { grid-template-columns:1fr !important; }
+    .settings-grid { grid-template-columns:1fr !important; }
+    .form-grid { grid-template-columns:1fr !important; }
+    .plan-grid { grid-template-columns:repeat(2,1fr) !important; }
+    .company-grid { grid-template-columns:1fr !important; }
+    table { min-width:500px; }
+    .page-header { flex-direction:column; align-items:flex-start !important; }
+    .modal { margin:0 8px; padding:20px; max-width:calc(100vw - 16px); }
+    .filters { gap:6px; }
+    .filters input, .filters select { min-width:100px; }
+    .notif { min-width:200px; max-width:calc(100vw - 40px); }
+    #notif { top:14px; right:14px; }
+  }
+  @media(max-width:400px){
+    .stats-grid { grid-template-columns:1fr 1fr !important; }
+    .stat-value { font-size:24px !important; }
+  }
 </style>
 </head>
 <body>
 <div id="notif"></div>
+<button class="hamburger" id="hamburgerBtn" aria-label="Open menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
 <div class="app">
   <aside class="sidebar">
     <div class="sidebar-brand">
@@ -172,8 +212,8 @@
           <div class="card-title">📋 Today's Attendance</div>
           <div id="todayDate" style="font-family:var(--mono);font-size:12px;color:var(--text2)"></div>
         </div>
-        <table><thead><tr><th>Employee</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
-        <tbody id="dashAttendanceTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody></table>
+        <div class='table-scroll'><table><thead><tr><th>Employee</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
+        <tbody id="dashAttendanceTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -198,8 +238,8 @@
             <select id="empStatusFilter"><option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
           </div>
         </div>
-        <table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
-        <tbody id="empTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody></table>
+        <div class='table-scroll'><table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody id="empTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -214,8 +254,8 @@
             <button class="btn btn-ghost btn-sm" id="attExportBtn">⬇ Export CSV</button>
           </div>
         </div>
-        <table><thead><tr><th>Employee</th><th>Date</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
-        <tbody id="attTable"><tr><td colspan="6" class="empty-state"><div class="spinner"></div></td></tr></tbody></table>
+        <div class='table-scroll'><table><thead><tr><th>Employee</th><th>Date</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
+        <tbody id="attTable"><tr><td colspan="6" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -230,8 +270,8 @@
             <button class="btn btn-ghost btn-sm" id="reportExportBtn">⬇ Export CSV</button>
           </div>
         </div>
-        <table><thead><tr><th>Employee</th><th>Present Days</th><th>Absent Days</th><th>Late Days</th><th>Total Hours</th><th>Avg Hours/Day</th></tr></thead>
-        <tbody id="reportTable"><tr><td colspan="6" class="empty-state">Select a month and click Generate</td></tr></tbody></table>
+        <div class='table-scroll'><table><thead><tr><th>Employee</th><th>Present Days</th><th>Absent Days</th><th>Late Days</th><th>Total Hours</th><th>Avg Hours/Day</th></tr></thead>
+        <tbody id="reportTable"><tr><td colspan="6" class="empty-state">Select a month and click Generate</td></tr></tbody></table></div>
       </div>
     </div>
 
@@ -584,6 +624,32 @@ function exportCSV(rows,filename) {
   a.download=filename+"_"+todayBD()+".csv"; a.click();
   notify("CSV exported!","success");
 }
+
+// ── MOBILE SIDEBAR ────────────────────────────────────────────────────────
+const hamburgerBtn = document.getElementById("hamburgerBtn");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+const sidebar = document.querySelector(".sidebar");
+hamburgerBtn.addEventListener("click", () => {
+  sidebar.classList.toggle("open");
+  sidebarOverlay.classList.toggle("open");
+});
+sidebarOverlay.addEventListener("click", () => {
+  sidebar.classList.remove("open");
+  sidebarOverlay.classList.remove("open");
+});
+// Close sidebar on nav item click on mobile
+document.querySelectorAll(".nav-item").forEach(item => {
+  item.addEventListener("click", () => {
+    if (window.innerWidth <= 768) {
+      sidebar.classList.remove("open");
+      sidebarOverlay.classList.remove("open");
+    }
+  });
+});
+
+// PWA service worker
+if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
+
 </script>
 </body>
 </html>
