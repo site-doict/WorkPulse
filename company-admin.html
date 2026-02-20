@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WorkPulse — Company Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080c14;
+    --surface: #0d1320;
+    --surface2: #121928;
+    --surface3: #17203300;
+    --border: rgba(148,163,184,0.08);
+    --border2: rgba(148,163,184,0.14);
+    --accent: #f97316;
+    --accent2: #fb923c;
+    --blue: #60a5fa;
+    --green: #34d399;
+    --red: #f87171;
+    --yellow: #fbbf24;
+    --purple: #a78bfa;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --muted: #475569;
+    --font: 'Outfit', sans-serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 20% -10%, rgba(249,115,22,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 100%, rgba(96,165,250,0.05) 0%, transparent 60%);
+    pointer-events: none; z-index: 0;
+  }
+
+  /* ── NOTIFICATIONS ── */
+  #notif {
+    position: fixed; top: 20px; right: 20px;
+    z-index: 9999; display: flex; flex-direction: column; gap: 8px;
+    pointer-events: none;
+  }
+  .notif {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 18px; border-radius: 10px;
+    font-family: var(--mono); font-size: 12px; font-weight: 500;
+    min-width: 260px; border: 1px solid transparent;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    transform: translateX(110%);
+    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    pointer-events: all;
+  }
+  .notif.show { transform: translateX(0); }
+  .notif.hide { transform: translateX(110%); transition: transform 0.3s ease; }
+  .notif.success { background: rgba(52,211,153,0.12); border-color: rgba(52,211,153,0.3); color: #6ee7b7; }
+  .notif.error   { background: rgba(248,113,113,0.12); border-color: rgba(248,113,113,0.3); color: #fca5a5; }
+  .notif.info    { background: rgba(96,165,250,0.12); border-color: rgba(96,165,250,0.3); color: #93c5fd; }
+
+  /* ── LAYOUT ── */
+  .app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
+
+  /* ── SIDEBAR ── */
+  .sidebar {
+    width: 240px; flex-shrink: 0;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 24px 0;
+    position: fixed; top: 0; left: 0; bottom: 0;
+    z-index: 100;
+  }
+
+  .sidebar-brand {
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 20px 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .sidebar-brand-icon {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 9px; display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .sidebar-brand-name { font-size: 16px; font-weight: 800; color: var(--text); }
+  .sidebar-brand-role { font-size: 10px; color: var(--accent); font-family: var(--mono); letter-spacing: 1px; }
+
+  .nav-section { padding: 0 12px; margin-bottom: 4px; }
+  .nav-label { font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; font-family: var(--mono); padding: 0 8px; margin-bottom: 6px; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px;
+    font-size: 13px; font-weight: 500; color: var(--text2);
+    cursor: pointer; transition: all 0.15s;
+    border: 1px solid transparent;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: rgba(148,163,184,0.06); color: var(--text); }
+  .nav-item.active { background: rgba(249,115,22,0.12); color: var(--accent); border-color: rgba(249,115,22,0.2); }
+  .nav-icon { font-size: 15px; width: 20px; text-align: center; }
+
+  .sidebar-bottom {
+    margin-top: auto; padding: 16px 12px 0;
+    border-top: 1px solid var(--border);
+  }
+  .sidebar-user { padding: 10px 12px; }
+  .sidebar-email { font-family: var(--mono); font-size: 11px; color: var(--text2); margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .btn-logout {
+    width: 100%; padding: 9px; border-radius: 8px; cursor: pointer;
+    border: 1px solid rgba(248,113,113,0.25);
+    background: rgba(248,113,113,0.07); color: var(--red);
+    font-family: var(--font); font-size: 13px; font-weight: 600;
+    transition: all 0.2s;
+  }
+  .btn-logout:hover { background: rgba(248,113,113,0.15); }
+
+  /* ── MAIN ── */
+  .main { margin-left: 240px; flex: 1; padding: 28px; min-height: 100vh; }
+
+  /* ── PAGE SECTIONS ── */
+  .page { display: none; }
+  .page.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── PAGE HEADER ── */
+  .page-header { margin-bottom: 24px; }
+  .page-title { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+  .page-sub { font-size: 13px; color: var(--text2); font-family: var(--mono); }
+
+  /* ── STAT CARDS ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px; position: relative; overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .stat-card:hover { border-color: var(--border2); }
+  .stat-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  }
+  .stat-card.orange::before { background: linear-gradient(90deg, var(--accent), transparent); }
+  .stat-card.green::before  { background: linear-gradient(90deg, var(--green), transparent); }
+  .stat-card.red::before    { background: linear-gradient(90deg, var(--red), transparent); }
+  .stat-card.yellow::before { background: linear-gradient(90deg, var(--yellow), transparent); }
+
+  .stat-icon { font-size: 22px; margin-bottom: 12px; }
+  .stat-value { font-size: 32px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
+  .stat-card.orange .stat-value { color: var(--accent); }
+  .stat-card.green  .stat-value { color: var(--green); }
+  .stat-card.red    .stat-value { color: var(--red); }
+  .stat-card.yellow .stat-value { color: var(--yellow); }
+  .stat-label { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin-bottom: 20px;
+  }
+  .card-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 22px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap; gap: 10px;
+  }
+  .card-title { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .card-body { padding: 22px; }
+
+  /* ── TABLES ── */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    padding: 10px 16px; text-align: left;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted);
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid rgba(148,163,184,0.05); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: rgba(148,163,184,0.03); }
+  tbody td { padding: 12px 16px; font-family: var(--mono); font-size: 12px; color: var(--text); vertical-align: middle; }
+
+  /* ── BADGES ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 10px; padding: 3px 10px; border-radius: 20px;
+    font-weight: 600; letter-spacing: 0.5px; font-family: var(--mono);
+  }
+  .badge-green  { background: rgba(52,211,153,0.1); color:#6ee7b7; border: 1px solid rgba(52,211,153,0.2); }
+  .badge-red    { background: rgba(248,113,113,0.1); color:#fca5a5; border: 1px solid rgba(248,113,113,0.2); }
+  .badge-yellow { background: rgba(251,191,36,0.1);  color:#fde68a; border: 1px solid rgba(251,191,36,0.2); }
+  .badge-blue   { background: rgba(96,165,250,0.1);  color:#93c5fd; border: 1px solid rgba(96,165,250,0.2); }
+  .badge-orange { background: rgba(249,115,22,0.1);  color:#fdba74; border: 1px solid rgba(249,115,22,0.2); }
+  .badge-muted  { background: rgba(148,163,184,0.08); color:var(--text2); border: 1px solid var(--border); }
+  .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    font-family: var(--font); font-weight: 600; font-size: 13px;
+    padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 7px;
+  }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--accent); color: white; box-shadow: 0 4px 16px rgba(249,115,22,0.25); }
+  .btn-primary:hover:not(:disabled) { background: var(--accent2); transform: translateY(-1px); }
+  .btn-ghost { background: rgba(148,163,184,0.08); color: var(--text2); border: 1px solid var(--border); }
+  .btn-ghost:hover { background: rgba(148,163,184,0.14); color: var(--text); }
+  .btn-danger { background: rgba(248,113,113,0.1); color: var(--red); border: 1px solid rgba(248,113,113,0.2); }
+  .btn-danger:hover { background: rgba(248,113,113,0.2); }
+  .btn-sm { padding: 6px 12px; font-size: 12px; }
+
+  /* ── FORMS ── */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 11px; font-weight: 600; color: var(--text2); letter-spacing: 0.5px; text-transform: uppercase; font-family: var(--mono); }
+  input, select {
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 8px; padding: 10px 14px;
+    font-family: var(--mono); font-size: 13px; color: var(--text);
+    outline: none; transition: border-color 0.2s;
+    width: 100%;
+  }
+  input:focus, select:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+  select option { background: var(--surface2); }
+
+  /* ── MODAL ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+    z-index: 1000; display: none;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 16px; padding: 28px; width: 100%; max-width: 480px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+    animation: modalIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes modalIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
+  .modal-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+
+  /* ── FILTERS ── */
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .filters input, .filters select { width: auto; min-width: 140px; padding: 8px 12px; font-size: 12px; }
+
+  /* ── SEARCH ── */
+  .search-wrap { position: relative; }
+  .search-wrap input { padding-left: 34px; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); font-size: 14px; pointer-events: none; }
+
+  /* ── TODAY STATUS ── */
+  .today-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+  .today-col { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .today-col-title { font-size: 11px; color: var(--text2); font-family: var(--mono); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+  .today-name { font-size: 12px; color: var(--text); padding: 6px 0; border-bottom: 1px solid var(--border); font-family: var(--mono); }
+  .today-name:last-child { border-bottom: none; }
+
+  /* ── SETTINGS ── */
+  .settings-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .settings-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .settings-card-title { font-size: 13px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+
+  /* ── EMPTY ── */
+  .empty-state { text-align: center; padding: 48px; color: var(--muted); font-family: var(--mono); font-size: 13px; }
+
+  /* ── SPINNER ── */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(249,115,22,0.2); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--muted); border-radius: 3px; }
+
+  @media(max-width:768px){
+    .sidebar { transform: translateX(-100%); }
+    .main { margin-left: 0; padding: 16px; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .form-grid { grid-template-columns: 1fr; }
+    .settings-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="notif"></div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon">⚡</div>
+      <div>
+        <div class="sidebar-brand-name">WorkPulse</div>
+        <div class="sidebar-brand-role">COMPANY ADMIN</div>
+      </div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">📊</span> Dashboard
+      </div>
+      <div class="nav-item" data-page="today">
+        <span class="nav-icon">📅</span> Today's Status
+      </div>
+    </div>
+
+    <div class="nav-section" style="margin-top:12px">
+      <div class="nav-label">Employees</div>
+      <div class="nav-item" data-page="employees">
+        <span class="nav-icon">👥</span> Employees
+      </div>
+      <div class="nav-item" data-page="attendance">
+        <span class="nav-icon">🕐</span> Attendance
+      </div>
+      <div class="nav-item" data-page="reports">
+        <span class="nav-icon">📈</span> Reports
+      </div>
+    </div>
+
+    <div class="nav-section" style="margin-top:12px">
+      <div class="nav-label">Company</div>
+      <div class="nav-item" data-page="settings">
+        <span class="nav-icon">⚙️</span> Settings
+      </div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="sidebar-user">
+        <div class="sidebar-email" id="adminEmail">—</div>
+        <button class="btn-logout" id="logoutBtn">Sign Out</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- ── DASHBOARD PAGE ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub" id="companyName">Loading company info…</div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card orange">
+          <div class="stat-icon">👥</div>
+          <div class="stat-value" id="stat-total">—</div>
+          <div class="stat-label">Total Employees</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon">✅</div>
+          <div class="stat-value" id="stat-present">—</div>
+          <div class="stat-label">Present Today</div>
+        </div>
+        <div class="stat-card red">
+          <div class="stat-icon">❌</div>
+          <div class="stat-value" id="stat-absent">—</div>
+          <div class="stat-label">Absent Today</div>
+        </div>
+        <div class="stat-card yellow">
+          <div class="stat-icon">⚠️</div>
+          <div class="stat-value" id="stat-late">—</div>
+          <div class="stat-label">Late Today</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">📋 Today's Attendance</div>
+          <div id="todayDate" style="font-family:var(--mono);font-size:12px;color:var(--text2)"></div>
+        </div>
+        <table>
+          <thead><tr><th>Employee</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
+          <tbody id="dashAttendanceTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── TODAY PAGE ── -->
+    <div class="page" id="page-today">
+      <div class="page-header">
+        <div class="page-title">Today's Status</div>
+        <div class="page-sub">Real-time employee presence overview</div>
+      </div>
+      <div class="today-grid">
+        <div class="today-col">
+          <div class="today-col-title"><span style="color:var(--green)">●</span> Checked In</div>
+          <div id="today-in-list"><div class="spinner"></div></div>
+        </div>
+        <div class="today-col">
+          <div class="today-col-title"><span style="color:var(--red)">●</span> Not Yet In</div>
+          <div id="today-out-list"><div class="spinner"></div></div>
+        </div>
+        <div class="today-col">
+          <div class="today-col-title"><span style="color:var(--yellow)">●</span> Checked Out</div>
+          <div id="today-done-list"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EMPLOYEES PAGE ── -->
+    <div class="page" id="page-employees">
+      <div class="page-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px">
+        <div>
+          <div class="page-title">Employees</div>
+          <div class="page-sub">Manage your team members</div>
+        </div>
+        <button class="btn btn-primary" id="addEmpBtn">＋ Add Employee</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="filters">
+            <div class="search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="empSearch" placeholder="Search name or email…">
+            </div>
+            <select id="empStatusFilter">
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+          <tbody id="empTable"><tr><td colspan="6" class="empty-state"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── ATTENDANCE PAGE ── -->
+    <div class="page" id="page-attendance">
+      <div class="page-header">
+        <div class="page-title">Attendance Records</div>
+        <div class="page-sub">View and filter all attendance history</div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="filters">
+            <input type="date" id="attDateFrom">
+            <input type="date" id="attDateTo">
+            <select id="attEmpFilter"><option value="">All Employees</option></select>
+            <button class="btn btn-ghost btn-sm" id="attFilterBtn">Filter</button>
+            <button class="btn btn-ghost btn-sm" id="attExportBtn">⬇ Export CSV</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Employee</th><th>Date</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
+          <tbody id="attTable"><tr><td colspan="6" class="empty-state"><div class="spinner"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── REPORTS PAGE ── -->
+    <div class="page" id="page-reports">
+      <div class="page-header">
+        <div class="page-title">Reports</div>
+        <div class="page-sub">Monthly summary per employee</div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="filters">
+            <select id="reportMonth"></select>
+            <select id="reportEmp"><option value="">All Employees</option></select>
+            <button class="btn btn-ghost btn-sm" id="reportGenBtn">Generate</button>
+            <button class="btn btn-ghost btn-sm" id="reportExportBtn">⬇ Export CSV</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>Employee</th><th>Present Days</th><th>Absent Days</th><th>Late Days</th><th>Total Hours</th><th>Avg Hours/Day</th></tr></thead>
+          <tbody id="reportTable"><tr><td colspan="6" class="empty-state">Select a month and click Generate</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS PAGE ── -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <div class="page-title">Company Settings</div>
+        <div class="page-sub">Manage your company configuration</div>
+      </div>
+      <div class="settings-grid">
+        <div class="settings-card">
+          <div class="settings-card-title">🏢 Company Info</div>
+          <div class="form-group" style="margin-bottom:14px">
+            <label>Company Name</label>
+            <input type="text" id="settingCompanyName" placeholder="Company name">
+          </div>
+          <div class="form-group" style="margin-bottom:14px">
+            <label>Seat Limit</label>
+            <input type="number" id="settingSeatLimit" placeholder="Max employees">
+          </div>
+          <button class="btn btn-primary" id="saveCompanyBtn">Save Changes</button>
+        </div>
+        <div class="settings-card">
+          <div class="settings-card-title">⏰ Office Hours</div>
+          <div class="form-group" style="margin-bottom:14px">
+            <label>Office Start Time (BD)</label>
+            <input type="time" id="settingOfficeStart" value="09:00">
+          </div>
+          <div class="form-group" style="margin-bottom:14px">
+            <label>Late After (minutes grace)</label>
+            <input type="number" id="settingGrace" placeholder="e.g. 15" value="15">
+          </div>
+          <button class="btn btn-primary" id="saveOfficeBtn">Save Hours</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD EMPLOYEE MODAL -->
+<div class="modal-overlay" id="addEmpModal">
+  <div class="modal">
+    <div class="modal-title">👤 Add New Employee</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="newEmpName" placeholder="John Doe">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="newEmpEmail" placeholder="john@company.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="newEmpPass" placeholder="Min 6 characters">
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="newEmpRole">
+          <option value="employee">Employee</option>
+          <option value="company_admin">Company Admin</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelEmpBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveEmpBtn">Create Employee</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { checkSession, logoutUser, supabase } from "./js/auth.js";
+
+// ── UTILS ──────────────────────────────────────────────────────────────────
+function notify(msg, type = "info") {
+  const icons = { success: "✓", error: "✕", info: "ℹ" };
+  const c = document.getElementById("notif");
+  const el = document.createElement("div");
+  el.className = `notif ${type}`;
+  el.innerHTML = `<span>${icons[type]}</span><span>${msg}</span>`;
+  c.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("show")));
+  setTimeout(() => {
+    el.classList.add("hide");
+    el.addEventListener("transitionend", () => el.remove(), { once: true });
+  }, 3500);
+}
+
+function bdTime(t) {
+  if (!t) return "—";
+  const utcStr = t.includes("Z") ? t : t.replace(" ", "T") + "Z";
+  const bd = new Date(new Date(utcStr).getTime() + 6 * 60 * 60 * 1000);
+  let h = bd.getUTCHours(), m = String(bd.getUTCMinutes()).padStart(2,"0"), s = String(bd.getUTCSeconds()).padStart(2,"0");
+  const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
+  return `${String(h).padStart(2,"0")}:${m}:${s} ${ap}`;
+}
+
+function bdDate(d) {
+  if (!d) return "—";
+  const [y, mo, day] = d.split("-").map(Number);
+  return new Date(y, mo-1, day).toLocaleDateString("en-US", { weekday:"short", day:"2-digit", month:"short", year:"numeric" });
+}
+
+function duration(inT, outT) {
+  if (!inT || !outT) return "—";
+  const utcIn  = inT.includes("Z")  ? inT  : inT.replace(" ","T")+"Z";
+  const utcOut = outT.includes("Z") ? outT : outT.replace(" ","T")+"Z";
+  const mins = Math.floor((new Date(utcOut) - new Date(utcIn)) / 60000);
+  if (mins < 0) return "—";
+  return `${Math.floor(mins/60)}h ${mins%60}m`;
+}
+
+function todayBD() {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
+}
+
+function isLate(inTime, officeStart, graceMins) {
+  if (!inTime) return false;
+  const utcStr = inTime.includes("Z") ? inTime : inTime.replace(" ","T")+"Z";
+  const bd = new Date(new Date(utcStr).getTime() + 6*60*60*1000);
+  const [oh, om] = officeStart.split(":").map(Number);
+  const officeMinutes = oh * 60 + om + (graceMins || 15);
+  const inMinutes = bd.getUTCHours() * 60 + bd.getUTCMinutes();
+  return inMinutes > officeMinutes;
+}
+
+// ── NAV ───────────────────────────────────────────────────────────────────
+document.querySelectorAll(".nav-item").forEach(item => {
+  item.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    item.classList.add("active");
+    document.getElementById("page-" + item.dataset.page).classList.add("active");
+    if (item.dataset.page === "today") loadTodayStatus();
+    if (item.dataset.page === "employees") loadEmployees();
+    if (item.dataset.page === "attendance") loadAttendancePage();
+    if (item.dataset.page === "reports") initReports();
+    if (item.dataset.page === "settings") loadSettings();
+  });
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+const user = await checkSession();
+if (!user) throw new Error("No session");
+
+// Check role
+const { data: profile } = await supabase.from("profiles").select("role, company_id").eq("id", user.id).single();
+if (!profile || profile.role === "employee") { window.location.href = "dashboard.html"; }
+
+document.getElementById("adminEmail").textContent = user.email;
+
+// Load company
+const { data: company } = await supabase.from("companies").select("*").eq("id", profile.company_id).single();
+const companyId = profile.company_id;
+const officeStart = company?.office_start_time || "09:00";
+const graceMins = 15;
+
+document.getElementById("companyName").textContent = company ? `${company.name} · ${company.seat_limit} seat limit` : "Company not assigned";
+document.getElementById("todayDate").textContent = new Date().toLocaleDateString("en-US", { weekday:"long", day:"numeric", month:"long", year:"numeric", timeZone:"Asia/Dhaka" });
+
+// Logout
+document.getElementById("logoutBtn").addEventListener("click", () => { notify("Signing out…", "info"); setTimeout(logoutUser, 700); });
+
+// ── LOAD EMPLOYEES ────────────────────────────────────────────────────────
+let allEmployees = [];
+let employeeEmails = {}; // id -> email map
+
+async function fetchEmployees() {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("company_id", companyId)
+    .neq("role", "super_admin");
+  if (error) { notify("Error loading employees: " + error.message, "error"); return []; }
+  return data || [];
+}
+
+// Get emails from auth — we use a workaround via profiles id list
+async function fetchEmailMap(employees) {
+  // Since we can't access auth.users directly from client,
+  // we'll use the user's own email and store others via our own data
+  // Best approach: use supabase admin or store email in profiles
+  // For now, show ID shortened as identifier
+  const map = {};
+  employees.forEach(e => { map[e.id] = e.full_name || e.id.substring(0,8) + "…"; });
+  return map;
+}
+
+// ── DASHBOARD ─────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  const employees = await fetchEmployees();
+  allEmployees = employees;
+  const today = todayBD();
+
+  const { data: todayAtt } = await supabase
+    .from("attendance")
+    .select("*")
+    .in("user_id", employees.map(e => e.id))
+    .eq("date", today);
+
+  const att = todayAtt || [];
+  const presentIds = att.map(a => a.user_id);
+  const lateCount = att.filter(a => isLate(a.in_time, officeStart, graceMins)).length;
+  const activeEmps = employees.filter(e => e.is_active !== false);
+
+  document.getElementById("stat-total").textContent = activeEmps.length;
+  document.getElementById("stat-present").textContent = att.length;
+  document.getElementById("stat-absent").textContent = Math.max(0, activeEmps.length - att.length);
+  document.getElementById("stat-late").textContent = lateCount;
+
+  // Table
+  const tbody = document.getElementById("dashAttendanceTable");
+  if (att.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No attendance records for today</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = att.map(a => {
+    const emp = employees.find(e => e.id === a.user_id);
+    const name = emp?.full_name || a.user_id.substring(0,8) + "…";
+    const late = isLate(a.in_time, officeStart, graceMins);
+    const statusBadge = late
+      ? `<span class="badge badge-yellow"><span class="badge-dot"></span>Late</span>`
+      : `<span class="badge badge-green"><span class="badge-dot"></span>Present</span>`;
+    return `<tr>
+      <td>${name}</td>
+      <td>${bdTime(a.in_time)}</td>
+      <td>${bdTime(a.out_time)}</td>
+      <td>${duration(a.in_time, a.out_time)}</td>
+      <td>${statusBadge}</td>
+    </tr>`;
+  }).join("");
+}
+loadDashboard();
+
+// ── TODAY STATUS ──────────────────────────────────────────────────────────
+async function loadTodayStatus() {
+  const employees = await fetchEmployees();
+  const today = todayBD();
+  const { data: todayAtt } = await supabase.from("attendance").select("*")
+    .in("user_id", employees.map(e => e.id)).eq("date", today);
+  const att = todayAtt || [];
+
+  const checkedInIds  = att.filter(a => a.in_time && !a.out_time).map(a => a.user_id);
+  const checkedOutIds = att.filter(a => a.out_time).map(a => a.user_id);
+  const notYetIds     = employees.filter(e => !att.find(a => a.user_id === e.id) && e.is_active !== false).map(e => e.id);
+
+  const nameOf = id => employees.find(e => e.id === id)?.full_name || id.substring(0,8) + "…";
+
+  const render = (ids, containerId) => {
+    const el = document.getElementById(containerId);
+    if (ids.length === 0) { el.innerHTML = `<div class="today-name" style="color:var(--muted)">None</div>`; return; }
+    el.innerHTML = ids.map(id => `<div class="today-name">${nameOf(id)}</div>`).join("");
+  };
+
+  render(checkedInIds,  "today-in-list");
+  render(notYetIds,     "today-out-list");
+  render(checkedOutIds, "today-done-list");
+}
+
+// ── EMPLOYEES PAGE ────────────────────────────────────────────────────────
+async function loadEmployees() {
+  const employees = await fetchEmployees();
+  allEmployees = employees;
+  renderEmpTable(employees);
+
+  // Populate attendance filter
+  const attSel = document.getElementById("attEmpFilter");
+  const repSel = document.getElementById("reportEmp");
+  attSel.innerHTML = `<option value="">All Employees</option>`;
+  repSel.innerHTML = `<option value="">All Employees</option>`;
+  employees.forEach(e => {
+    const name = e.full_name || e.id.substring(0,8);
+    attSel.innerHTML += `<option value="${e.id}">${name}</option>`;
+    repSel.innerHTML += `<option value="${e.id}">${name}</option>`;
+  });
+}
+
+function renderEmpTable(employees) {
+  const tbody = document.getElementById("empTable");
+  if (!employees.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No employees found</td></tr>`; return; }
+  tbody.innerHTML = employees.map(e => {
+    const active = e.is_active !== false;
+    const statusBadge = active
+      ? `<span class="badge badge-green"><span class="badge-dot"></span>Active</span>`
+      : `<span class="badge badge-red"><span class="badge-dot"></span>Inactive</span>`;
+    const roleBadge = e.role === "company_admin"
+      ? `<span class="badge badge-orange">Admin</span>`
+      : `<span class="badge badge-muted">Employee</span>`;
+    const joined = e.created_at ? new Date(e.created_at).toLocaleDateString("en-US", { day:"2-digit", month:"short", year:"numeric" }) : "—";
+    const toggleLabel = active ? "Deactivate" : "Activate";
+    const toggleClass = active ? "btn-danger" : "btn-ghost";
+    return `<tr>
+      <td>${e.full_name || "—"}</td>
+      <td style="color:var(--text2)">${e.id.substring(0,12)}…</td>
+      <td>${roleBadge}</td>
+      <td>${statusBadge}</td>
+      <td>${joined}</td>
+      <td style="display:flex;gap:6px">
+        <button class="btn btn-ghost btn-sm" onclick="editEmp('${e.id}')">Edit</button>
+        <button class="btn ${toggleClass} btn-sm" onclick="toggleEmp('${e.id}', ${active})">${toggleLabel}</button>
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+// Search / filter
+document.getElementById("empSearch").addEventListener("input", function() {
+  const q = this.value.toLowerCase();
+  const filtered = allEmployees.filter(e => (e.full_name||"").toLowerCase().includes(q));
+  renderEmpTable(filtered);
+});
+
+document.getElementById("empStatusFilter").addEventListener("change", function() {
+  const val = this.value;
+  const filtered = val === "" ? allEmployees
+    : val === "active" ? allEmployees.filter(e => e.is_active !== false)
+    : allEmployees.filter(e => e.is_active === false);
+  renderEmpTable(filtered);
+});
+
+// Toggle active
+window.toggleEmp = async (id, currentlyActive) => {
+  const { error } = await supabase.from("profiles").update({ is_active: !currentlyActive }).eq("id", id);
+  if (error) { notify("Error: " + error.message, "error"); return; }
+  notify(currentlyActive ? "Employee deactivated" : "Employee activated", "success");
+  loadEmployees();
+};
+
+// Edit (simple name/role update)
+window.editEmp = async (id) => {
+  const emp = allEmployees.find(e => e.id === id);
+  if (!emp) return;
+  const newName = prompt("Full name:", emp.full_name || "");
+  if (newName === null) return;
+  const { error } = await supabase.from("profiles").update({ full_name: newName }).eq("id", id);
+  if (error) { notify("Error: " + error.message, "error"); return; }
+  notify("Employee updated", "success");
+  loadEmployees();
+};
+
+// ── ADD EMPLOYEE MODAL ────────────────────────────────────────────────────
+document.getElementById("addEmpBtn").addEventListener("click", () => {
+  document.getElementById("addEmpModal").classList.add("open");
+});
+document.getElementById("cancelEmpBtn").addEventListener("click", () => {
+  document.getElementById("addEmpModal").classList.remove("open");
+});
+
+document.getElementById("saveEmpBtn").addEventListener("click", async () => {
+  const name  = document.getElementById("newEmpName").value.trim();
+  const email = document.getElementById("newEmpEmail").value.trim();
+  const pass  = document.getElementById("newEmpPass").value;
+  const role  = document.getElementById("newEmpRole").value;
+
+  if (!email || !pass) { notify("Email and password are required", "error"); return; }
+  if (pass.length < 6) { notify("Password must be at least 6 characters", "error"); return; }
+
+  const btn = document.getElementById("saveEmpBtn");
+  btn.disabled = true; btn.textContent = "Creating…";
+
+  // Sign up new user
+  const { data, error } = await supabase.auth.signUp({ email, password: pass });
+  if (error) { notify("Signup error: " + error.message, "error"); btn.disabled = false; btn.textContent = "Create Employee"; return; }
+
+  const newUserId = data.user?.id;
+  if (!newUserId) { notify("Failed to get user ID", "error"); btn.disabled = false; btn.textContent = "Create Employee"; return; }
+
+  // Update profile
+  const { error: profErr } = await supabase.from("profiles")
+    .upsert({ id: newUserId, full_name: name, role, company_id: companyId, is_active: true });
+
+  if (profErr) { notify("Profile error: " + profErr.message, "error"); btn.disabled = false; btn.textContent = "Create Employee"; return; }
+
+  notify(`Employee ${email} created successfully!`, "success");
+  document.getElementById("addEmpModal").classList.remove("open");
+  document.getElementById("newEmpName").value = "";
+  document.getElementById("newEmpEmail").value = "";
+  document.getElementById("newEmpPass").value = "";
+  btn.disabled = false; btn.textContent = "Create Employee";
+  loadEmployees();
+});
+
+// ── ATTENDANCE PAGE ───────────────────────────────────────────────────────
+async function loadAttendancePage() {
+  if (!allEmployees.length) await loadEmployees();
+
+  // Default date range: last 7 days
+  const to   = todayBD();
+  const from = new Date(new Date().getTime() - 6*24*60*60*1000).toLocaleDateString("en-CA", { timeZone:"Asia/Dhaka" });
+  document.getElementById("attDateFrom").value = from;
+  document.getElementById("attDateTo").value   = to;
+
+  await fetchAttendance(from, to, "");
+}
+
+async function fetchAttendance(from, to, empId) {
+  const tbody = document.getElementById("attTable");
+  tbody.innerHTML = `<tr><td colspan="6" class="empty-state"><div class="spinner"></div></td></tr>`;
+
+  let query = supabase.from("attendance").select("*")
+    .in("user_id", allEmployees.map(e => e.id))
+    .gte("date", from).lte("date", to)
+    .order("date", { ascending: false });
+
+  if (empId) query = query.eq("user_id", empId);
+
+  const { data, error } = await query;
+  if (error) { notify("Error: " + error.message, "error"); return; }
+  if (!data?.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No records found</td></tr>`; return; }
+
+  tbody.innerHTML = data.map(a => {
+    const emp = allEmployees.find(e => e.id === a.user_id);
+    const name = emp?.full_name || a.user_id.substring(0,8) + "…";
+    const late = isLate(a.in_time, officeStart, graceMins);
+    const badge = late
+      ? `<span class="badge badge-yellow"><span class="badge-dot"></span>Late</span>`
+      : `<span class="badge badge-green"><span class="badge-dot"></span>Present</span>`;
+    return `<tr>
+      <td>${name}</td>
+      <td>${bdDate(a.date)}</td>
+      <td>${bdTime(a.in_time)}</td>
+      <td>${bdTime(a.out_time)}</td>
+      <td>${duration(a.in_time, a.out_time)}</td>
+      <td>${badge}</td>
+    </tr>`;
+  }).join("");
+
+  // Store for export
+  window._attData = data;
+}
+
+document.getElementById("attFilterBtn").addEventListener("click", () => {
+  fetchAttendance(
+    document.getElementById("attDateFrom").value,
+    document.getElementById("attDateTo").value,
+    document.getElementById("attEmpFilter").value
+  );
+});
+
+document.getElementById("attExportBtn").addEventListener("click", () => {
+  if (!window._attData?.length) { notify("No data to export", "info"); return; }
+  exportCSV(window._attData.map(a => {
+    const emp = allEmployees.find(e => e.id === a.user_id);
+    return {
+      Employee: emp?.full_name || a.user_id,
+      Date: a.date,
+      "In Time": bdTime(a.in_time),
+      "Out Time": bdTime(a.out_time),
+      Duration: duration(a.in_time, a.out_time),
+      Status: isLate(a.in_time, officeStart, graceMins) ? "Late" : "Present"
+    };
+  }), "attendance_export");
+});
+
+// ── REPORTS ───────────────────────────────────────────────────────────────
+function initReports() {
+  if (!allEmployees.length) loadEmployees();
+  const sel = document.getElementById("reportMonth");
+  sel.innerHTML = "";
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = d.toLocaleDateString("en-CA", {}).substring(0,7);
+    const label = d.toLocaleDateString("en-US", { month:"long", year:"numeric" });
+    sel.innerHTML += `<option value="${val}">${label}</option>`;
+  }
+}
+
+document.getElementById("reportGenBtn").addEventListener("click", async () => {
+  const month  = document.getElementById("reportMonth").value;
+  const empId  = document.getElementById("reportEmp").value;
+  if (!month) { notify("Select a month", "info"); return; }
+
+  const from = month + "-01";
+  const to   = new Date(parseInt(month.split("-")[0]), parseInt(month.split("-")[1]), 0).toISOString().split("T")[0];
+
+  let query = supabase.from("attendance").select("*")
+    .in("user_id", allEmployees.map(e => e.id))
+    .gte("date", from).lte("date", to);
+  if (empId) query = query.eq("user_id", empId);
+
+  const { data, error } = await query;
+  if (error) { notify("Error: " + error.message, "error"); return; }
+
+  // Business days in month
+  const totalDays = new Date(parseInt(month.split("-")[0]), parseInt(month.split("-")[1]), 0).getDate();
+
+  // Group by user
+  const emps = empId ? allEmployees.filter(e => e.id === empId) : allEmployees;
+  const rows = emps.map(e => {
+    const records = (data || []).filter(a => a.user_id === e.id);
+    const presentDays = records.length;
+    const absentDays  = Math.max(0, totalDays - presentDays);
+    const lateDays    = records.filter(a => isLate(a.in_time, officeStart, graceMins)).length;
+    const totalMins   = records.reduce((sum, a) => {
+      if (!a.in_time || !a.out_time) return sum;
+      const utcIn  = a.in_time.includes("Z")  ? a.in_time  : a.in_time.replace(" ","T")+"Z";
+      const utcOut = a.out_time.includes("Z") ? a.out_time : a.out_time.replace(" ","T")+"Z";
+      return sum + Math.max(0, Math.floor((new Date(utcOut) - new Date(utcIn)) / 60000));
+    }, 0);
+    const totalHrs = `${Math.floor(totalMins/60)}h ${totalMins%60}m`;
+    const avgMins  = presentDays > 0 ? Math.floor(totalMins / presentDays) : 0;
+    const avgHrs   = `${Math.floor(avgMins/60)}h ${avgMins%60}m`;
+    return { emp: e, presentDays, absentDays, lateDays, totalHrs, avgHrs, totalMins };
+  });
+
+  const tbody = document.getElementById("reportTable");
+  if (!rows.length) { tbody.innerHTML = `<tr><td colspan="6" class="empty-state">No data</td></tr>`; return; }
+  tbody.innerHTML = rows.map(r => `<tr>
+    <td>${r.emp.full_name || r.emp.id.substring(0,8)+"…"}</td>
+    <td><span class="badge badge-green">${r.presentDays}</span></td>
+    <td><span class="badge badge-red">${r.absentDays}</span></td>
+    <td><span class="badge badge-yellow">${r.lateDays}</span></td>
+    <td>${r.totalHrs}</td>
+    <td>${r.avgHrs}</td>
+  </tr>`).join("");
+
+  window._reportData = rows;
+});
+
+document.getElementById("reportExportBtn").addEventListener("click", () => {
+  if (!window._reportData?.length) { notify("Generate report first", "info"); return; }
+  exportCSV(window._reportData.map(r => ({
+    Employee: r.emp.full_name || r.emp.id,
+    "Present Days": r.presentDays,
+    "Absent Days": r.absentDays,
+    "Late Days": r.lateDays,
+    "Total Hours": r.totalHrs,
+    "Avg Hours/Day": r.avgHrs
+  })), "monthly_report");
+});
+
+// ── SETTINGS ──────────────────────────────────────────────────────────────
+async function loadSettings() {
+  if (!company) return;
+  document.getElementById("settingCompanyName").value = company.name || "";
+  document.getElementById("settingSeatLimit").value   = company.seat_limit || "";
+  document.getElementById("settingOfficeStart").value = company.office_start_time || "09:00";
+}
+
+document.getElementById("saveCompanyBtn").addEventListener("click", async () => {
+  const name  = document.getElementById("settingCompanyName").value.trim();
+  const seats = parseInt(document.getElementById("settingSeatLimit").value);
+  if (!name) { notify("Company name required", "error"); return; }
+  const { error } = await supabase.from("companies").update({ name, seat_limit: seats }).eq("id", companyId);
+  if (error) { notify("Error: " + error.message, "error"); return; }
+  notify("Company info saved!", "success");
+  document.getElementById("companyName").textContent = `${name} · ${seats} seat limit`;
+});
+
+document.getElementById("saveOfficeBtn").addEventListener("click", async () => {
+  const start = document.getElementById("settingOfficeStart").value;
+  const { error } = await supabase.from("companies").update({ office_start_time: start }).eq("id", companyId);
+  if (error) { notify("Error: " + error.message, "error"); return; }
+  notify("Office hours saved!", "success");
+});
+
+// ── CSV EXPORT ────────────────────────────────────────────────────────────
+function exportCSV(rows, filename) {
+  if (!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [headers.join(","), ...rows.map(r => headers.map(h => `"${r[h]}"`).join(","))].join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filename}_${todayBD()}.csv`;
+  a.click();
+  notify("CSV exported!", "success");
+}
+
+</script>
+</body>
+</html>
