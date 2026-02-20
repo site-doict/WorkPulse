@@ -860,7 +860,7 @@ document.getElementById("saveEmpBtn").addEventListener("click", async () => {
       "Content-Type": "application/json",
       "Authorization": `Bearer ${session.access_token}`
     },
-    console.log("Sending to edge function:", { email, full_name: name, role, company_id: profile.company_id });
+
     body: JSON.stringify({ email, password: pass, full_name: name, role, company_id: profile.company_id })
   });
 
