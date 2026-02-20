@@ -81,13 +81,16 @@
         return;
       }
 
-      if (role === "super_admin") {
-        window.location.href = "super.html";
-      } else {
-        window.location.href = "dashboard.html";
-      }
+          if (role === "super_admin") {
+      window.location.href = "super.html";
+    } else if (role === "company_admin") {
+      window.location.href = "company-admin.html";  // add this
+    } else {
+      window.location.href = "dashboard.html";
+    }  
     });
   </script>
 
 </body>
 </html>
+
