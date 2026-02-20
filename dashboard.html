@@ -2,495 +2,257 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#63b3ed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="WorkPulse">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>WorkPulse — Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
-    --bg: #0a0f1e;
-    --surface: #0f1629;
-    --surface2: #151d35;
-    --border: rgba(99,179,237,0.12);
-    --accent: #63b3ed;
-    --accent2: #4fd1c5;
-    --green: #48bb78;
-    --red: #fc8181;
-    --text: #e2e8f0;
-    --muted: #718096;
-    --font-d: 'Syne', sans-serif;
-    --font-m: 'JetBrains Mono', monospace;
+    --bg: #0a0f1e; --surface: #0f1629; --surface2: #151d35;
+    --border: rgba(99,179,237,0.12); --accent: #63b3ed; --accent2: #4fd1c5;
+    --green: #48bb78; --red: #fc8181; --text: #e2e8f0; --muted: #718096;
+    --font-d: 'Syne', sans-serif; --font-m: 'JetBrains Mono', monospace;
   }
+  body { font-family: var(--font-d); background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(99,179,237,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(99,179,237,0.03) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
 
-  body {
-    font-family: var(--font-d);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+  #notif-container { position:fixed; top:16px; right:16px; z-index:9999; display:flex; flex-direction:column; gap:10px; pointer-events:none; max-width:calc(100vw - 32px); }
+  .notif { display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:10px; font-family:var(--font-m); font-size:12px; font-weight:600; min-width:240px; max-width:300px; border:1px solid transparent; box-shadow:0 8px 32px rgba(0,0,0,0.4); transform:translateX(120%); transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events:all; }
+  .notif.show { transform:translateX(0); }
+  .notif.hide { transform:translateX(120%); transition:transform 0.3s ease; }
+  .notif.success { background:rgba(72,187,120,0.15); border-color:rgba(72,187,120,0.4); color:#9ae6b4; }
+  .notif.error   { background:rgba(252,129,129,0.15); border-color:rgba(252,129,129,0.4); color:#fed7d7; }
+  .notif.info    { background:rgba(99,179,237,0.15); border-color:rgba(99,179,237,0.4); color:#bee3f8; }
 
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image:
-      linear-gradient(rgba(99,179,237,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(99,179,237,0.03) 1px, transparent 1px);
-    background-size: 40px 40px;
-    pointer-events: none; z-index: 0;
-  }
+  .wrapper { position:relative; z-index:1; max-width:1080px; margin:0 auto; padding:16px 16px 80px; }
 
-  /* ── NOTIFICATIONS ── */
-  #notif-container {
-    position: fixed; top: 20px; right: 20px;
-    z-index: 9999;
-    display: flex; flex-direction: column; gap: 10px;
-    pointer-events: none;
-  }
-  .notif {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 18px;
-    border-radius: 10px;
-    font-family: var(--font-m); font-size: 13px; font-weight: 600;
-    min-width: 270px;
-    backdrop-filter: blur(12px);
-    border: 1px solid transparent;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    transform: translateX(120%);
-    transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
-    pointer-events: all;
-  }
-  .notif.show  { transform: translateX(0); }
-  .notif.hide  { transform: translateX(120%); transition: transform 0.3s ease; }
-  .notif.success { background: rgba(72,187,120,0.15); border-color: rgba(72,187,120,0.4); color: #9ae6b4; }
-  .notif.error   { background: rgba(252,129,129,0.15); border-color: rgba(252,129,129,0.4); color: #fed7d7; }
-  .notif.info    { background: rgba(99,179,237,0.15); border-color: rgba(99,179,237,0.4); color: #bee3f8; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-bottom:14px; gap:10px; }
+  .brand { display:flex; align-items:center; gap:10px; min-width:0; }
+  .brand-icon { width:38px; height:38px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+  .brand-name { font-size:17px; font-weight:800; background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; white-space:nowrap; }
+  .brand-sub { font-size:10px; color:var(--muted); font-family:var(--font-m); }
+  .topbar-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
+  #user-email { font-family:var(--font-m); font-size:11px; color:var(--muted); background:var(--surface2); padding:5px 11px; border-radius:20px; border:1px solid var(--border); max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .btn-logout { font-family:var(--font-d); font-weight:700; font-size:12px; padding:8px 14px; border-radius:8px; cursor:pointer; border:1px solid rgba(252,129,129,0.3); background:rgba(252,129,129,0.08); color:var(--red); transition:all 0.2s; white-space:nowrap; }
+  .btn-logout:hover { background:rgba(252,129,129,0.2); }
 
-  /* ── LAYOUT ── */
-  .wrapper { position: relative; z-index: 1; max-width: 1080px; margin: 0 auto; padding: 24px 20px 60px; }
-
-  /* ── TOPBAR ── */
-  .topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 16px 24px;
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-    margin-bottom: 24px; gap: 12px; flex-wrap: wrap;
-    animation: fadeDown 0.5s ease both;
-  }
-  .brand { display: flex; align-items: center; gap: 12px; }
-  .brand-icon {
-    width: 40px; height: 40px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;
-  }
-  .brand-name {
-    font-size: 20px; font-weight: 800; letter-spacing: -0.5px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  }
-  .brand-sub { font-size: 11px; color: var(--muted); font-family: var(--font-m); }
-
-  .topbar-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  #user-email {
-    font-family: var(--font-m); font-size: 12px; color: var(--muted);
-    background: var(--surface2); padding: 6px 14px;
-    border-radius: 20px; border: 1px solid var(--border);
-    max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
-  .btn-logout {
-    font-family: var(--font-d); font-weight: 700; font-size: 13px;
-    padding: 9px 18px; border-radius: 8px; cursor: pointer;
-    border: 1px solid rgba(252,129,129,0.3);
-    background: rgba(252,129,129,0.08); color: var(--red);
-    transition: all 0.2s;
-  }
-  .btn-logout:hover { background: rgba(252,129,129,0.2); border-color: rgba(252,129,129,0.6); }
-
-  /* ── CLOCK ── */
-  .clock-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-    padding: 24px 32px; margin-bottom: 22px;
-    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-    position: relative; overflow: hidden;
-    animation: fadeDown 0.5s 0.08s ease both;
-  }
-  .clock-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
-  }
-  .clock-label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; font-family: var(--font-m); margin-bottom: 6px; }
-  #live-clock {
-    font-family: var(--font-m); font-size: clamp(30px, 5vw, 48px);
-    font-weight: 600; color: var(--accent); letter-spacing: 3px; line-height: 1;
-  }
-  #live-date { font-family: var(--font-m); font-size: 13px; color: var(--muted); margin-top: 5px; }
-  .tz-pill {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--surface2); border: 1px solid var(--border);
-    padding: 8px 16px; border-radius: 8px;
-    font-family: var(--font-m); font-size: 12px; color: var(--accent2);
-  }
-  .tz-dot { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: blink 2s infinite; }
+  .clock-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:14px; position:relative; overflow:hidden; }
+  .clock-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent),var(--accent2),transparent); }
+  .clock-inner { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .clock-label { font-size:10px; font-weight:600; color:var(--muted); letter-spacing:2px; text-transform:uppercase; font-family:var(--font-m); margin-bottom:5px; }
+  #live-clock { font-family:var(--font-m); font-size:clamp(24px,5vw,42px); font-weight:600; color:var(--accent); letter-spacing:2px; line-height:1; }
+  #live-date { font-family:var(--font-m); font-size:11px; color:var(--muted); margin-top:4px; }
+  .tz-pill { display:flex; align-items:center; gap:7px; background:var(--surface2); border:1px solid var(--border); padding:7px 13px; border-radius:8px; font-family:var(--font-m); font-size:11px; color:var(--accent2); white-space:nowrap; }
+  .tz-dot { width:6px; height:6px; background:var(--green); border-radius:50%; animation:blink 2s infinite; flex-shrink:0; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
 
-  /* ── ACTION ROW ── */
-  .actions-row {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 22px;
-    animation: fadeDown 0.5s 0.16s ease both;
-  }
-  .action-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-    padding: 22px 24px; display: flex; align-items: center; justify-content: space-between; gap: 16px;
-    transition: border-color 0.2s;
-  }
-  .action-card:hover { border-color: rgba(99,179,237,0.25); }
-  .action-title { font-size: 15px; font-weight: 700; margin-bottom: 3px; }
-  .action-sub   { font-size: 12px; color: var(--muted); font-family: var(--font-m); }
-  .btn-mark {
-    font-family: var(--font-d); font-weight: 700; font-size: 14px;
-    padding: 11px 22px; border-radius: 10px; border: none; cursor: pointer;
-    transition: all 0.2s; white-space: nowrap; letter-spacing: 0.3px;
-  }
-  .btn-mark:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
-  .btn-in  { background: linear-gradient(135deg,#48bb78,#38a169); color:#fff; box-shadow: 0 4px 18px rgba(72,187,120,0.28); }
-  .btn-in:hover:not(:disabled)  { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(72,187,120,0.4); }
-  .btn-out { background: linear-gradient(135deg,#fc8181,#e53e3e); color:#fff; box-shadow: 0 4px 18px rgba(252,129,129,0.28); }
-  .btn-out:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 26px rgba(252,129,129,0.4); }
+  .actions-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+  .action-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:12px; }
+  .action-title { font-size:14px; font-weight:700; }
+  .action-sub { font-size:11px; color:var(--muted); font-family:var(--font-m); }
+  .btn-mark { font-family:var(--font-d); font-weight:700; font-size:14px; padding:14px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; width:100%; }
+  .btn-mark:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-in  { background:linear-gradient(135deg,#48bb78,#38a169); color:#fff; box-shadow:0 4px 14px rgba(72,187,120,0.3); }
+  .btn-in:active  { transform:scale(0.97); }
+  .btn-out { background:linear-gradient(135deg,#fc8181,#e53e3e); color:#fff; box-shadow:0 4px 14px rgba(252,129,129,0.3); }
+  .btn-out:active { transform:scale(0.97); }
 
-  /* ── TABLE ── */
-  .table-card {
-    background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
-    overflow: hidden; animation: fadeDown 0.5s 0.24s ease both;
-  }
-  .table-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 18px 24px 14px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px;
-  }
-  .table-title { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
-  .table-icon { width: 30px; height: 30px; background: rgba(99,179,237,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
-  .badge { font-family: var(--font-m); font-size: 11px; padding: 3px 10px; border-radius: 20px; background: rgba(99,179,237,0.1); color: var(--accent); border: 1px solid rgba(99,179,237,0.2); }
+  .table-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+  .table-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 12px; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px; }
+  .table-title { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+  .table-icon { width:28px; height:28px; background:rgba(99,179,237,0.1); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:13px; }
+  .badge { font-family:var(--font-m); font-size:10px; padding:3px 10px; border-radius:20px; background:rgba(99,179,237,0.1); color:var(--accent); border:1px solid rgba(99,179,237,0.2); }
+  .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { width:100%; border-collapse:collapse; min-width:460px; }
+  thead th { padding:10px 14px; text-align:left; font-family:var(--font-m); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); background:var(--surface2); border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody tr { border-bottom:1px solid rgba(99,179,237,0.05); }
+  tbody tr:last-child { border-bottom:none; }
+  tbody tr:hover { background:rgba(99,179,237,0.04); }
+  tbody td { padding:11px 14px; font-family:var(--font-m); font-size:12px; white-space:nowrap; }
+  .s-badge { display:inline-flex; align-items:center; gap:5px; font-size:10px; padding:3px 10px; border-radius:20px; font-weight:700; }
+  .s-present { background:rgba(72,187,120,0.12); color:#9ae6b4; border:1px solid rgba(72,187,120,0.25); }
+  .s-absent  { background:rgba(252,129,129,0.12); color:#fed7d7; border:1px solid rgba(252,129,129,0.25); }
+  .s-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .empty td { text-align:center; padding:40px; color:var(--muted); font-size:12px; white-space:normal; }
+  .spinner { display:inline-block; width:18px; height:18px; border:2px solid rgba(99,179,237,0.15); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
+  @keyframes spin { to{transform:rotate(360deg)} }
 
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  thead th {
-    padding: 11px 20px; text-align: left; font-family: var(--font-m); font-size: 11px;
-    letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted);
-    background: var(--surface2); border-bottom: 1px solid var(--border); font-weight: 600;
+  /* PWA INSTALL BANNER */
+  #installBanner { display:none; position:fixed; bottom:16px; left:16px; right:16px; background:var(--surface); border:1px solid rgba(99,179,237,0.25); border-radius:14px; padding:14px 16px; z-index:500; box-shadow:0 8px 32px rgba(0,0,0,0.5); align-items:center; gap:12px; }
+  #installBanner.show { display:flex; }
+  .install-text { flex:1; font-size:12px; font-family:var(--font-m); }
+  .install-text strong { display:block; color:var(--text); margin-bottom:2px; }
+  .install-text span { color:var(--muted); font-size:11px; }
+  .btn-install { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0a0f1e; font-family:var(--font-d); font-weight:700; font-size:12px; padding:8px 14px; border-radius:8px; border:none; cursor:pointer; white-space:nowrap; }
+  .btn-dismiss { background:none; border:none; color:var(--muted); cursor:pointer; font-size:18px; padding:4px 6px; flex-shrink:0; }
+
+  @media(max-width:480px) {
+    #user-email { display:none; }
+    .tz-pill { display:none; }
+    .actions-row { grid-template-columns:1fr 1fr; }
   }
-  tbody tr { border-bottom: 1px solid rgba(99,179,237,0.05); transition: background 0.15s; }
-  tbody tr:last-child { border-bottom: none; }
-  tbody tr:hover { background: rgba(99,179,237,0.04); }
-  tbody td { padding: 13px 20px; font-family: var(--font-m); font-size: 13px; }
-
-  .s-badge {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 11px; padding: 4px 11px; border-radius: 20px;
-    font-weight: 700; letter-spacing: 0.5px;
-  }
-  .s-present { background: rgba(72,187,120,0.12); color:#9ae6b4; border: 1px solid rgba(72,187,120,0.25); }
-  .s-absent  { background: rgba(252,129,129,0.12); color:#fed7d7; border: 1px solid rgba(252,129,129,0.25); }
-  .s-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
-
-  .empty td { text-align: center; padding: 48px; color: var(--muted); font-size: 14px; }
-
-  .spinner {
-    display: inline-block; width: 20px; height: 20px;
-    border: 2px solid rgba(99,179,237,0.15); border-top-color: var(--accent);
-    border-radius: 50%; animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes fadeDown { from{opacity:0;transform:translateY(-14px)} to{opacity:1;transform:translateY(0)} }
-
-  @media(max-width:600px){
-    .actions-row { grid-template-columns: 1fr; }
-    .action-card { flex-direction: column; align-items: flex-start; }
-    .btn-mark { width: 100%; }
-    .clock-card { flex-direction: column; }
+  @media(max-width:360px) {
+    .actions-row { grid-template-columns:1fr; }
+    .brand-sub { display:none; }
   }
 </style>
 </head>
 <body>
-
 <div id="notif-container"></div>
 
-<div class="wrapper">
+<div id="installBanner">
+  <div class="install-text"><strong>Install WorkPulse</strong><span>Add to home screen for quick access</span></div>
+  <button class="btn-install" id="installBtn">Install</button>
+  <button class="btn-dismiss" id="dismissBtn">✕</button>
+</div>
 
-  <!-- TOPBAR -->
+<div class="wrapper">
   <header class="topbar">
     <div class="brand">
       <div class="brand-icon">⚡</div>
-      <div>
-        <div class="brand-name">WorkPulse</div>
-        <div class="brand-sub">ATTENDANCE SYSTEM</div>
-      </div>
+      <div><div class="brand-name">WorkPulse</div><div class="brand-sub">ATTENDANCE SYSTEM</div></div>
     </div>
     <div class="topbar-right">
-      <div id="user-email">checking session…</div>
+      <div id="user-email">loading…</div>
       <button class="btn-logout" id="logoutBtn">Sign Out</button>
     </div>
   </header>
 
-  <!-- LIVE CLOCK -->
   <div class="clock-card">
-    <div>
-      <div class="clock-label">🕐 Live Time — Bangladesh</div>
-      <div id="live-clock">00:00:00</div>
-      <div id="live-date">—</div>
-    </div>
-    <div class="tz-pill">
-      <div class="tz-dot"></div>
-      Asia / Dhaka &nbsp;(GMT+6)
+    <div class="clock-inner">
+      <div>
+        <div class="clock-label">🕐 Live Time — Bangladesh</div>
+        <div id="live-clock">00:00:00 AM</div>
+        <div id="live-date">—</div>
+      </div>
+      <div class="tz-pill"><div class="tz-dot"></div>Asia / Dhaka (GMT+6)</div>
     </div>
   </div>
 
-  <!-- MARK IN / OUT -->
   <div class="actions-row">
     <div class="action-card">
-      <div>
-        <div class="action-title">🟢 Mark In</div>
-        <div class="action-sub">Record your arrival time</div>
-      </div>
+      <div><div class="action-title">🟢 Mark In</div><div class="action-sub">Record your arrival</div></div>
       <button class="btn-mark btn-in" id="inBtn">Mark In</button>
     </div>
     <div class="action-card">
-      <div>
-        <div class="action-title">🔴 Mark Out</div>
-        <div class="action-sub">Record your departure time</div>
-      </div>
+      <div><div class="action-title">🔴 Mark Out</div><div class="action-sub">Record your departure</div></div>
       <button class="btn-mark btn-out" id="outBtn">Mark Out</button>
     </div>
   </div>
 
-  <!-- ATTENDANCE TABLE -->
   <div class="table-card">
     <div class="table-head">
-      <div class="table-title">
-        <div class="table-icon">📋</div>
-        Attendance History
-      </div>
+      <div class="table-title"><div class="table-icon">📋</div>Attendance History</div>
       <div class="badge">Last 7 Days</div>
     </div>
-    <table>
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>In Time</th>
-          <th>Out Time</th>
-          <th>Duration</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="attendanceList">
-        <tr class="empty"><td colspan="5"><div class="spinner"></div></td></tr>
-      </tbody>
-    </table>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Date</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
+        <tbody id="attendanceList"><tr class="empty"><td colspan="5"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
   </div>
-
 </div>
 
 <script type="module">
-// ─────────────────────────────────────────────────────────────────────────────
-// Import from the correct relative path
-// ─────────────────────────────────────────────────────────────────────────────
 import { checkSession, logoutUser, supabase } from "./js/auth.js";
 
-// ── NOTIFICATION ─────────────────────────────────────────────────────────────
-function notify(msg, type = "info") {
-  const icons = { success: "✓", error: "✕", info: "ℹ" };
-  const wrap = document.getElementById("notif-container");
-  const el = document.createElement("div");
-  el.className = `notif ${type}`;
-  el.innerHTML = `<span style="font-size:16px">${icons[type]}</span><span>${msg}</span>`;
+if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
+
+let deferredPrompt;
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault(); deferredPrompt = e;
+  setTimeout(()=>document.getElementById("installBanner").classList.add("show"), 3000);
+});
+document.getElementById("installBtn").addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  document.getElementById("installBanner").classList.remove("show");
+});
+document.getElementById("dismissBtn").addEventListener("click", () => document.getElementById("installBanner").classList.remove("show"));
+
+function notify(msg, type="info") {
+  const icons={success:"✓",error:"✕",info:"ℹ"};
+  const wrap=document.getElementById("notif-container");
+  const el=document.createElement("div");
+  el.className="notif "+type;
+  el.innerHTML="<span>"+icons[type]+"</span><span>"+msg+"</span>";
   wrap.appendChild(el);
-
-  // Force reflow then add .show
-  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("show")));
-
-  setTimeout(() => {
-    el.classList.add("hide");
-    el.addEventListener("transitionend", () => el.remove(), { once: true });
-  }, 3500);
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add("show")));
+  setTimeout(()=>{el.classList.add("hide");el.addEventListener("transitionend",()=>el.remove(),{once:true});},3500);
 }
 
-// ── CLOCK ─────────────────────────────────────────────────────────────────────
 function tick() {
-  const now = new Date();
-  document.getElementById("live-clock").textContent =
-    now.toLocaleTimeString("en-US", { hour:"2-digit", minute:"2-digit", second:"2-digit", hour12:true, timeZone:"Asia/Dhaka" });
-  document.getElementById("live-date").textContent =
-    now.toLocaleDateString("en-US", { weekday:"long", day:"numeric", month:"long", year:"numeric", timeZone:"Asia/Dhaka" });
+  const now=new Date();
+  document.getElementById("live-clock").textContent=now.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true,timeZone:"Asia/Dhaka"});
+  document.getElementById("live-date").textContent=now.toLocaleDateString("en-US",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Dhaka"});
 }
-tick();
-setInterval(tick, 1000);
+tick(); setInterval(tick,1000);
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-const tFmt = t => {
-  if (!t) return "—";
-  // Force UTC parsing — replace space with T and add Z if missing
-  const utcStr = t.includes("Z") ? t : t.replace(" ", "T") + "Z";
-  const bd = new Date(new Date(utcStr).getTime() + 6 * 60 * 60 * 1000);
-  let h = bd.getUTCHours(), m = String(bd.getUTCMinutes()).padStart(2,"0"), s = String(bd.getUTCSeconds()).padStart(2,"0");
-  const ap = h >= 12 ? "PM" : "AM"; h = h % 12 || 12;
-  return `${String(h).padStart(2,"0")}:${m}:${s} ${ap}`;
+const tFmt=t=>{
+  if(!t)return"—";
+  const s=t.includes("Z")?t:t.replace(" ","T")+"Z";
+  const bd=new Date(new Date(s).getTime()+6*60*60*1000);
+  let h=bd.getUTCHours(),m=String(bd.getUTCMinutes()).padStart(2,"0"),sec=String(bd.getUTCSeconds()).padStart(2,"0");
+  const ap=h>=12?"PM":"AM"; h=h%12||12;
+  return String(h).padStart(2,"0")+":"+m+":"+sec+" "+ap;
 };
+const dFmt=d=>{const[y,mo,day]=d.split("-").map(Number);return new Date(y,mo-1,day).toLocaleDateString("en-US",{weekday:"short",day:"2-digit",month:"short"});};
+function duration(a,b){if(!a||!b)return"—";const sa=a.includes("Z")?a:a.replace(" ","T")+"Z",sb=b.includes("Z")?b:b.replace(" ","T")+"Z";const m=Math.floor((new Date(sb)-new Date(sa))/60000);return m<0?"—":Math.floor(m/60)+"h "+m%60+"m";}
+function todayBD(){return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"});}
 
-const dFmt = d => {
-  // d is already a BD date string like "2026-02-20", just display it directly
-  const [y, mo, day] = d.split("-").map(Number);
-  const date = new Date(y, mo - 1, day);
-  return date.toLocaleDateString("en-US", { weekday:"short", day:"2-digit", month:"short", year:"numeric" });
-};
-
-function duration(inT, outT) {
-  if (!inT || !outT) return "—";
-  const mins = Math.floor((new Date(outT) - new Date(inT)) / 60000);
-  return `${Math.floor(mins/60)}h ${mins%60}m`;
-}
-
-// ── LOAD ATTENDANCE ───────────────────────────────────────────────────────────
 async function loadAndRender(userId) {
-  const { data, error } = await supabase
-    .from("attendance")
-    .select("*")
-    .eq("user_id", userId)
-    .order("date", { ascending: false })
-    .limit(7);
-
-  const tbody = document.getElementById("attendanceList");
-
-  if (error) {
-    notify("Failed to load attendance: " + error.message, "error");
-    tbody.innerHTML = `<tr class="empty"><td colspan="5">Error loading data.</td></tr>`;
-    return;
-  }
-
-  if (!data || data.length === 0) {
-    tbody.innerHTML = `<tr class="empty"><td colspan="5">No records found for the last 7 days.</td></tr>`;
-    return;
-  }
-
-  tbody.innerHTML = data.map(a => {
-    const sc = (a.status||"").toLowerCase() === "present" ? "s-present" : "s-absent";
-    return `
-      <tr>
-        <td>${dFmt(a.date)}</td>
-        <td>${tFmt(a.in_time)}</td>
-        <td>${tFmt(a.out_time)}</td>
-        <td>${duration(a.in_time, a.out_time)}</td>
-        <td><span class="s-badge ${sc}"><span class="s-dot"></span>${a.status || "—"}</span></td>
-      </tr>`;
+  const{data,error}=await supabase.from("attendance").select("*").eq("user_id",userId).order("date",{ascending:false}).limit(7);
+  const tbody=document.getElementById("attendanceList");
+  if(error){notify("Failed: "+error.message,"error");tbody.innerHTML="<tr class='empty'><td colspan='5'>Error loading.</td></tr>";return;}
+  if(!data||!data.length){tbody.innerHTML="<tr class='empty'><td colspan='5'>No records yet — mark in to start!</td></tr>";return;}
+  tbody.innerHTML=data.map(a=>{
+    const sc=(a.status||"").toLowerCase()==="present"?"s-present":"s-absent";
+    return"<tr><td>"+dFmt(a.date)+"</td><td>"+tFmt(a.in_time)+"</td><td>"+tFmt(a.out_time)+"</td><td>"+duration(a.in_time,a.out_time)+"</td><td><span class='s-badge "+sc+"'><span class='s-dot'></span>"+(a.status||"—")+"</span></td></tr>";
   }).join("");
 }
 
-// ── MARK IN ───────────────────────────────────────────────────────────────────
 async function markIn(userId) {
-  const now  = new Date();
-  // Get today's date in Bangladesh timezone as YYYY-MM-DD
-  const date = now.toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
-
-  // Check if already marked in today
-  const { data: existing, error: checkErr } = await supabase
-    .from("attendance")
-    .select("id, in_time")
-    .eq("user_id", userId)
-    .eq("date", date)
-    .maybeSingle();   // ← .maybeSingle() won't throw if row is missing (unlike .single())
-
-  if (checkErr) { notify("Error: " + checkErr.message, "error"); return false; }
-
-  if (existing) {
-    notify(`Already marked In today at ${tFmt(existing.in_time)}`, "info");
-    return false;
-  }
-
- // Get company_id from profile
-const { data: prof } = await supabase.from("profiles").select("company_id").eq("id", userId).single();
-
-const { error: insertErr } = await supabase.from("attendance").insert([{
-  user_id: userId,
-  date,
-  in_time: now.toISOString(),
-  status: "Present",
-  company_id: prof?.company_id || null
-}]);
-
-  if (insertErr) { notify("Insert failed: " + insertErr.message, "error"); return false; }
-
-  notify(`Marked In at ${tFmt(now.toISOString())}`, "success");
+  const now=new Date(),date=now.toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"});
+  const{data:ex,error:ce}=await supabase.from("attendance").select("id,in_time").eq("user_id",userId).eq("date",date).maybeSingle();
+  if(ce){notify("Error: "+ce.message,"error");return false;}
+  if(ex){notify("Already marked In at "+tFmt(ex.in_time),"info");return false;}
+  const{data:prof}=await supabase.from("profiles").select("company_id").eq("id",userId).single();
+  const{error:ie}=await supabase.from("attendance").insert([{user_id:userId,date,in_time:now.toISOString(),status:"Present",company_id:prof?.company_id||null}]);
+  if(ie){notify("Insert failed: "+ie.message,"error");return false;}
+  notify("Marked In at "+tFmt(now.toISOString()),"success");
   return true;
 }
 
-// ── MARK OUT ──────────────────────────────────────────────────────────────────
 async function markOut(userId) {
-  const now  = new Date();
-  const date = now.toLocaleDateString("en-CA", { timeZone: "Asia/Dhaka" });
-
-  const { data: existing, error: checkErr } = await supabase
-    .from("attendance")
-    .select("id, out_time")
-    .eq("user_id", userId)
-    .eq("date", date)
-    .maybeSingle();
-
-  if (checkErr) { notify("Error: " + checkErr.message, "error"); return false; }
-
-  if (!existing) {
-    notify("You haven't marked In today yet!", "error");
-    return false;
-  }
-
-  if (existing.out_time) {
-    notify(`Already marked Out today at ${tFmt(existing.out_time)}`, "info");
-    return false;
-  }
-
-  const { error: updateErr } = await supabase
-    .from("attendance")
-    .update({ out_time: now.toISOString() })
-    .eq("user_id", userId)
-    .eq("date", date);
-
-  if (updateErr) { notify("Update failed: " + updateErr.message, "error"); return false; }
-
-  notify(`Marked Out at ${tFmt(now.toISOString())}`, "success");
+  const now=new Date(),date=now.toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"});
+  const{data:ex,error:ce}=await supabase.from("attendance").select("id,out_time").eq("user_id",userId).eq("date",date).maybeSingle();
+  if(ce){notify("Error: "+ce.message,"error");return false;}
+  if(!ex){notify("Haven't marked In today!","error");return false;}
+  if(ex.out_time){notify("Already marked Out at "+tFmt(ex.out_time),"info");return false;}
+  const{error:ue}=await supabase.from("attendance").update({out_time:now.toISOString()}).eq("user_id",userId).eq("date",date);
+  if(ue){notify("Update failed: "+ue.message,"error");return false;}
+  notify("Marked Out at "+tFmt(now.toISOString()),"success");
   return true;
 }
 
-// ── INIT ──────────────────────────────────────────────────────────────────────
-const user = await checkSession();   // redirects to login.html if no session
-if (!user) throw new Error("No session");
+const user=await checkSession();
+if(!user)throw new Error("No session");
 
-document.getElementById("user-email").textContent = user.email;
-
-// Initial table load
+document.getElementById("user-email").textContent=user.email;
 loadAndRender(user.id);
 
-// Buttons
-document.getElementById("inBtn").addEventListener("click", async () => {
-  const btn = document.getElementById("inBtn");
-  btn.disabled = true;
-  const ok = await markIn(user.id);
-  if (ok) await loadAndRender(user.id);
-  btn.disabled = false;
-});
-
-document.getElementById("outBtn").addEventListener("click", async () => {
-  const btn = document.getElementById("outBtn");
-  btn.disabled = true;
-  const ok = await markOut(user.id);
-  if (ok) await loadAndRender(user.id);
-  btn.disabled = false;
-});
-
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-  notify("Signing out…", "info");
-  setTimeout(logoutUser, 700);
-});
+document.getElementById("inBtn").addEventListener("click",async()=>{const btn=document.getElementById("inBtn");btn.disabled=true;const ok=await markIn(user.id);if(ok)await loadAndRender(user.id);btn.disabled=false;});
+document.getElementById("outBtn").addEventListener("click",async()=>{const btn=document.getElementById("outBtn");btn.disabled=true;const ok=await markOut(user.id);if(ok)await loadAndRender(user.id);btn.disabled=false;});
+document.getElementById("logoutBtn").addEventListener("click",()=>{notify("Signing out…","info");setTimeout(logoutUser,700);});
 </script>
 </body>
 </html>
-
-
-
-
-
