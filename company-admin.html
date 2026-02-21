@@ -409,28 +409,25 @@ if (companyId) {
     document.getElementById("companyName").textContent = co.name+" · "+co.seat_limit+" seat limit";
 
     // ── AUTO-SUSPEND IF EXPIRED ──────────────────────────────────────────
-    if (co.subscription_ends_at && co.status !== "suspended") {
+    if (co.subscription_ends_at) {
       const expired = new Date(co.subscription_ends_at) < new Date();
-      if (expired) {
+      if (expired && co.status !== "suspended") {
         await supabase.from("companies").update({status:"suspended", suspended_at: new Date().toISOString()}).eq("id", companyId);
         await supabase.auth.signOut();
         window.location.href = "login.html";
-        return;
-      }
-    }
-
-    // ── SUBSCRIPTION WARNING BANNER ──────────────────────────────────────
-    if (co.subscription_ends_at && co.status !== "suspended") {
-      const daysLeft = Math.ceil((new Date(co.subscription_ends_at) - new Date()) / (1000*60*60*24));
-      const banner   = document.getElementById("subWarning");
-      const title    = document.getElementById("subWarningTitle");
-      const msg      = document.getElementById("subWarningMsg");
-      const icon     = document.getElementById("subWarningIcon");
-      if (daysLeft <= 7 && daysLeft > 0) {
-        banner.className = "sub-warning show " + (daysLeft <= 3 ? "danger" : "warning");
-        icon.textContent  = daysLeft <= 3 ? "🚨" : "⚠️";
-        title.textContent = daysLeft <= 3 ? "Subscription Expiring in "+daysLeft+" day"+(daysLeft===1?"":"s")+"!" : "Subscription Expiring Soon";
-        msg.textContent   = "Your subscription expires on "+new Date(co.subscription_ends_at).toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})+". Contact your service provider to renew.";
+      } else if (!expired) {
+        // ── SUBSCRIPTION WARNING BANNER ────────────────────────────────
+        const daysLeft = Math.ceil((new Date(co.subscription_ends_at) - new Date()) / (1000*60*60*24));
+        if (daysLeft <= 7 && daysLeft > 0) {
+          const banner = document.getElementById("subWarning");
+          const title  = document.getElementById("subWarningTitle");
+          const msg    = document.getElementById("subWarningMsg");
+          const icon   = document.getElementById("subWarningIcon");
+          banner.className  = "sub-warning show " + (daysLeft <= 3 ? "danger" : "warning");
+          icon.textContent  = daysLeft <= 3 ? "🚨" : "⚠️";
+          title.textContent = daysLeft <= 3 ? "Subscription Expiring in "+daysLeft+" day"+(daysLeft===1?"":"s")+"!" : "Subscription Expiring Soon";
+          msg.textContent   = "Your subscription expires on "+new Date(co.subscription_ends_at).toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})+". Contact your service provider to renew.";
+        }
       }
     }
   }
