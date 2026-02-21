@@ -83,6 +83,38 @@
   .spinner { display:inline-block; width:18px; height:18px; border:2px solid rgba(99,179,237,0.15); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
   @keyframes spin { to{transform:rotate(360deg)} }
 
+
+  /* PROFILE CARD */
+  .profile-card { background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:20px; margin-bottom:14px; position:relative; overflow:hidden; }
+  .profile-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--accent2),var(--accent),transparent); }
+  .profile-header { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+  .profile-avatar { width:52px; height:52px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+  .profile-name { font-size:18px; font-weight:800; margin-bottom:3px; }
+  .profile-email { font-family:var(--font-m); font-size:11px; color:var(--muted); }
+  .profile-company { font-family:var(--font-m); font-size:11px; color:var(--accent2); margin-top:2px; }
+  .profile-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+  .profile-stat { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:12px 14px; }
+  .profile-stat-label { font-family:var(--font-m); font-size:10px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+  .profile-stat-value { font-family:var(--font-m); font-size:16px; font-weight:600; color:var(--accent); }
+  .profile-divider { border:none; border-top:1px solid var(--border); margin:16px 0; }
+  .profile-section-title { font-size:13px; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+  .form-group { margin-bottom:14px; }
+  .form-label { font-family:var(--font-m); font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; display:block; }
+  .form-input { width:100%; background:var(--surface2); border:1px solid rgba(99,179,237,0.15); border-radius:10px; padding:11px 14px; font-family:var(--font-m); font-size:13px; color:var(--text); outline:none; transition:border-color 0.2s; -webkit-appearance:none; }
+  .form-input:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(99,179,237,0.1); }
+  .form-input::placeholder { color:var(--muted); }
+  .btn-save { font-family:var(--font-d); font-weight:700; font-size:13px; padding:11px 20px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:7px; }
+  .btn-save:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn-primary-s { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#0a0f1e; }
+  .btn-primary-s:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 6px 20px rgba(99,179,237,0.3); }
+  .btn-row { display:flex; gap:10px; flex-wrap:wrap; }
+
+  /* BOTTOM NAV */
+  .bottom-nav { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:flex; z-index:100; padding-bottom:env(safe-area-inset-bottom); }
+  .bottom-nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:10px 4px; cursor:pointer; font-family:var(--font-m); font-size:10px; color:var(--muted); transition:color 0.2s; border:none; background:none; }
+  .bottom-nav-item.active { color:var(--accent); }
+  .bottom-nav-icon { font-size:20px; line-height:1; }
+
   /* PWA INSTALL BANNER */
   #installBanner { display:none; position:fixed; bottom:16px; left:16px; right:16px; background:var(--surface); border:1px solid rgba(99,179,237,0.25); border-radius:14px; padding:14px 16px; z-index:500; box-shadow:0 8px 32px rgba(0,0,0,0.5); align-items:center; gap:12px; }
   #installBanner.show { display:flex; }
@@ -121,6 +153,7 @@
     <div class="topbar-right">
       <div id="user-email">loading…</div>
       <button class="btn-logout" id="logoutBtn">Sign Out</button>
+      <button class="btn-logout" id="profileNavBtn" style="background:rgba(99,179,237,0.08);border-color:rgba(99,179,237,0.25);color:var(--accent)">👤</button>
     </div>
   </header>
 
@@ -156,6 +189,59 @@
         <thead><tr><th>Date</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
         <tbody id="attendanceList"><tr class="empty"><td colspan="5"><div class="spinner"></div></td></tr></tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav" id="bottomNav">
+    <button class="bottom-nav-item active" data-section="home">
+      <span class="bottom-nav-icon">🏠</span>Home
+    </button>
+    <button class="bottom-nav-item" data-section="profile">
+      <span class="bottom-nav-icon">👤</span>Profile
+    </button>
+  </nav>
+
+  <!-- PROFILE SECTION -->
+  <div id="profileSection" style="display:none">
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="profile-avatar">👤</div>
+        <div>
+          <div class="profile-name" id="profileName">—</div>
+          <div class="profile-email" id="profileEmail">—</div>
+          <div class="profile-company" id="profileCompany">—</div>
+        </div>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-stat"><div class="profile-stat-label">This Month</div><div class="profile-stat-value" id="profilePresent">—</div><div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Days Present</div></div>
+        <div class="profile-stat"><div class="profile-stat-label">Today</div><div class="profile-stat-value" id="profileToday" style="color:var(--green)">—</div><div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Status</div></div>
+      </div>
+
+      <hr class="profile-divider">
+      <div class="profile-section-title">✏️ Update Name</div>
+      <div class="form-group">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" id="profileNameInput" placeholder="Your full name">
+      </div>
+      <div class="btn-row">
+        <button class="btn-save btn-primary-s" id="saveNameBtn">Save Name</button>
+      </div>
+
+      <hr class="profile-divider">
+      <div class="profile-section-title">🔑 Change Password</div>
+      <div class="form-group">
+        <label class="form-label">New Password</label>
+        <input type="password" class="form-input" id="newPassInput" placeholder="Min 6 characters">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Confirm Password</label>
+        <input type="password" class="form-input" id="confirmPassInput" placeholder="Repeat password">
+      </div>
+      <div class="btn-row">
+        <button class="btn-save btn-primary-s" id="savePassBtn">Change Password</button>
+        <button class="btn-save" style="background:rgba(252,129,129,0.1);color:var(--red);border:1px solid rgba(252,129,129,0.2)" id="profileLogoutBtn">Sign Out</button>
+      </div>
     </div>
   </div>
 </div>
@@ -248,10 +334,94 @@ const user=await checkSession();
 if(!user)throw new Error("No session");
 
 document.getElementById("user-email").textContent=user.email;
+loadProfile(user.id, user.email);
 loadAndRender(user.id);
 
 document.getElementById("inBtn").addEventListener("click",async()=>{const btn=document.getElementById("inBtn");btn.disabled=true;const ok=await markIn(user.id);if(ok)await loadAndRender(user.id);btn.disabled=false;});
 document.getElementById("outBtn").addEventListener("click",async()=>{const btn=document.getElementById("outBtn");btn.disabled=true;const ok=await markOut(user.id);if(ok)await loadAndRender(user.id);btn.disabled=false;});
+
+// ── BOTTOM NAV ────────────────────────────────────────────────────────────
+const homeSection    = document.querySelector(".wrapper > *:not(#profileSection):not(#installBanner):not(#notif-container)");
+const profileSection = document.getElementById("profileSection");
+
+document.querySelectorAll(".bottom-nav-item").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".bottom-nav-item").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    if (btn.dataset.section === "profile") {
+      // Hide main content, show profile
+      document.querySelectorAll(".topbar, .clock-card, .actions-row, .table-card").forEach(el => el.style.display = "none");
+      profileSection.style.display = "block";
+    } else {
+      document.querySelectorAll(".topbar, .clock-card, .actions-row, .table-card").forEach(el => el.style.display = "");
+      profileSection.style.display = "none";
+    }
+  });
+});
+
+document.getElementById("profileNavBtn")?.addEventListener("click", () => {
+  document.querySelectorAll(".bottom-nav-item").forEach(b => b.classList.remove("active"));
+  document.querySelector("[data-section='profile']").classList.add("active");
+  document.querySelectorAll(".topbar, .clock-card, .actions-row, .table-card").forEach(el => el.style.display = "none");
+  profileSection.style.display = "block";
+});
+
+// ── LOAD PROFILE ──────────────────────────────────────────────────────────
+async function loadProfile(userId, userEmail) {
+  document.getElementById("profileEmail").textContent = userEmail;
+
+  const { data: prof } = await supabase.from("profiles").select("full_name, company_id").eq("id", userId).single();
+  if (prof) {
+    document.getElementById("profileName").textContent = prof.full_name || "—";
+    document.getElementById("profileNameInput").value  = prof.full_name || "";
+    if (prof.company_id) {
+      const { data: co } = await supabase.from("companies").select("name").eq("id", prof.company_id).single();
+      if (co) document.getElementById("profileCompany").textContent = "🏢 " + co.name;
+    }
+  }
+
+  // This month present count
+  const now = new Date();
+  const from = now.toLocaleDateString("en-CA", {timeZone:"Asia/Dhaka"}).substring(0,7) + "-01";
+  const { data: attMonth } = await supabase.from("attendance").select("id").eq("user_id", userId).gte("date", from);
+  document.getElementById("profilePresent").textContent = (attMonth?.length || 0) + " days";
+
+  // Today status
+  const today = new Date().toLocaleDateString("en-CA", {timeZone:"Asia/Dhaka"});
+  const { data: attToday } = await supabase.from("attendance").select("in_time, out_time").eq("user_id", userId).eq("date", today).maybeSingle();
+  if (!attToday) document.getElementById("profileToday").textContent = "Not In";
+  else if (attToday.in_time && !attToday.out_time) { document.getElementById("profileToday").textContent = "Checked In"; document.getElementById("profileToday").style.color = "var(--green)"; }
+  else if (attToday.out_time) { document.getElementById("profileToday").textContent = "Checked Out"; document.getElementById("profileToday").style.color = "var(--accent)"; }
+}
+
+// ── SAVE NAME ─────────────────────────────────────────────────────────────
+document.getElementById("saveNameBtn").addEventListener("click", async () => {
+  const name = document.getElementById("profileNameInput").value.trim();
+  if (!name) { notify("Please enter your name", "error"); return; }
+  const btn = document.getElementById("saveNameBtn");
+  btn.disabled = true; btn.textContent = "Saving…";
+  const { error } = await supabase.from("profiles").update({ full_name: name }).eq("id", user.id);
+  if (error) { notify("Error: " + error.message, "error"); }
+  else { notify("Name updated!", "success"); document.getElementById("profileName").textContent = name; }
+  btn.disabled = false; btn.textContent = "Save Name";
+});
+
+// ── CHANGE PASSWORD ───────────────────────────────────────────────────────
+document.getElementById("savePassBtn").addEventListener("click", async () => {
+  const newPass  = document.getElementById("newPassInput").value;
+  const confPass = document.getElementById("confirmPassInput").value;
+  if (!newPass || newPass.length < 6) { notify("Password must be at least 6 characters", "error"); return; }
+  if (newPass !== confPass) { notify("Passwords do not match", "error"); return; }
+  const btn = document.getElementById("savePassBtn");
+  btn.disabled = true; btn.textContent = "Updating…";
+  const { error } = await supabase.auth.updateUser({ password: newPass });
+  if (error) { notify("Error: " + error.message, "error"); }
+  else { notify("Password changed successfully!", "success"); document.getElementById("newPassInput").value = ""; document.getElementById("confirmPassInput").value = ""; }
+  btn.disabled = false; btn.textContent = "Change Password";
+});
+
+document.getElementById("profileLogoutBtn").addEventListener("click", () => { notify("Signing out…", "info"); setTimeout(logoutUser, 700); });
+
 document.getElementById("logoutBtn").addEventListener("click",()=>{notify("Signing out…","info");setTimeout(logoutUser,700);});
 </script>
 </body>
