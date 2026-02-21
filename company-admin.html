@@ -120,6 +120,15 @@
   .settings-card { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:20px; }
   .settings-card-title { font-size:13px; font-weight:700; margin-bottom:16px; }
   .empty-state { text-align:center; padding:48px; color:var(--muted); font-family:var(--mono); font-size:13px; }
+
+  /* SUBSCRIPTION WARNING BANNER */
+  .sub-warning { display:none; align-items:center; gap:12px; padding:13px 18px; border-radius:12px; font-family:var(--mono); font-size:12px; margin-bottom:20px; }
+  .sub-warning.show { display:flex; }
+  .sub-warning.danger  { background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); color:#fca5a5; }
+  .sub-warning.warning { background:rgba(251,191,36,0.1);  border:1px solid rgba(251,191,36,0.3);  color:#fde68a; }
+  .sub-warning-icon { font-size:18px; flex-shrink:0; }
+  .sub-warning-text strong { display:block; margin-bottom:2px; font-size:13px; }
+
   .spinner { display:inline-block; width:16px; height:16px; border:2px solid rgba(249,115,22,0.2); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
   @keyframes spin { to{transform:rotate(360deg)} }
   ::-webkit-scrollbar { width:6px; }
@@ -200,6 +209,10 @@
       <div class="page-header">
         <div class="page-title">Dashboard</div>
         <div class="page-sub" id="companyName">Loading…</div>
+      </div>
+      <div class="sub-warning" id="subWarning">
+        <span class="sub-warning-icon" id="subWarningIcon">⚠️</span>
+        <div class="sub-warning-text"><strong id="subWarningTitle">Subscription Expiring Soon</strong><span id="subWarningMsg">Your subscription expires soon. Contact your service provider to renew.</span></div>
       </div>
       <div class="stats-grid">
         <div class="stat-card orange"><div class="stat-icon">👥</div><div class="stat-value" id="stat-total">—</div><div class="stat-label">Total Employees</div></div>
@@ -394,6 +407,32 @@ if (companyId) {
     companyData = co;
     officeStart = co.office_start_time || "09:00";
     document.getElementById("companyName").textContent = co.name+" · "+co.seat_limit+" seat limit";
+
+    // ── AUTO-SUSPEND IF EXPIRED ──────────────────────────────────────────
+    if (co.subscription_ends_at && co.status !== "suspended") {
+      const expired = new Date(co.subscription_ends_at) < new Date();
+      if (expired) {
+        await supabase.from("companies").update({status:"suspended", suspended_at: new Date().toISOString()}).eq("id", companyId);
+        await supabase.auth.signOut();
+        window.location.href = "login.html";
+        return;
+      }
+    }
+
+    // ── SUBSCRIPTION WARNING BANNER ──────────────────────────────────────
+    if (co.subscription_ends_at && co.status !== "suspended") {
+      const daysLeft = Math.ceil((new Date(co.subscription_ends_at) - new Date()) / (1000*60*60*24));
+      const banner   = document.getElementById("subWarning");
+      const title    = document.getElementById("subWarningTitle");
+      const msg      = document.getElementById("subWarningMsg");
+      const icon     = document.getElementById("subWarningIcon");
+      if (daysLeft <= 7 && daysLeft > 0) {
+        banner.className = "sub-warning show " + (daysLeft <= 3 ? "danger" : "warning");
+        icon.textContent  = daysLeft <= 3 ? "🚨" : "⚠️";
+        title.textContent = daysLeft <= 3 ? "Subscription Expiring in "+daysLeft+" day"+(daysLeft===1?"":"s")+"!" : "Subscription Expiring Soon";
+        msg.textContent   = "Your subscription expires on "+new Date(co.subscription_ends_at).toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})+". Contact your service provider to renew.";
+      }
+    }
   }
 } else {
   document.getElementById("companyName").textContent = "⚠️ No company assigned";
