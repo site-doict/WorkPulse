@@ -251,7 +251,7 @@
             <select id="empStatusFilter"><option value="">All Status</option><option value="active">Active</option><option value="inactive">Inactive</option></select>
           </div>
         </div>
-        <div class='table-scroll'><table><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+        <div class='table-scroll'><table><thead><tr><th>Name</th><th>Designation</th><th>Role</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
         <tbody id="empTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody></table></div>
       </div>
     </div>
@@ -441,7 +441,7 @@ let allEmployees = [];
 
 async function fetchEmployees() {
   if (!companyId) return [];
-  const {data,error} = await supabase.from("profiles").select("*").eq("company_id",companyId).neq("role","super_admin");
+  const {data,error} = await supabase.from("profiles").select("id,full_name,role,is_active,created_at,company_id,designation,department,gender,date_of_birth,mobile_no,emergency_mobile_no,marital_status,blood_group,address,joining_date").eq("company_id",companyId).neq("role","super_admin");
   if (error) { notify("Error: "+error.message,"error"); return []; }
   return data||[];
 }
@@ -509,12 +509,23 @@ window.toggleEmp=async(id,active)=>{
   if(error){notify("Error: "+error.message,"error");return;}
   notify(active?"Employee deactivated":"Employee activated","success"); loadEmployees();
 };
-window.editEmp=async(id)=>{
+window.editEmp=(id)=>{
   const emp=allEmployees.find(e=>e.id===id);
-  const n=prompt("Full name:",emp?.full_name||""); if(n===null)return;
-  const{error}=await supabase.from("profiles").update({full_name:n}).eq("id",id);
-  if(error){notify("Error: "+error.message,"error");return;}
-  notify("Employee updated","success"); loadEmployees();
+  if(!emp)return;
+  // Populate edit modal
+  document.getElementById("ee-id").value                  = emp.id;
+  document.getElementById("ee-full_name").value           = emp.full_name||"";
+  document.getElementById("ee-designation").value         = emp.designation||"";
+  document.getElementById("ee-department").value          = emp.department||"";
+  document.getElementById("ee-gender").value              = emp.gender||"";
+  document.getElementById("ee-date_of_birth").value       = emp.date_of_birth||"";
+  document.getElementById("ee-marital_status").value      = emp.marital_status||"";
+  document.getElementById("ee-blood_group").value         = emp.blood_group||"";
+  document.getElementById("ee-joining_date").value        = emp.joining_date||"";
+  document.getElementById("ee-mobile_no").value           = emp.mobile_no||"";
+  document.getElementById("ee-emergency_mobile_no").value = emp.emergency_mobile_no||"";
+  document.getElementById("ee-address").value             = emp.address||"";
+  document.getElementById("editEmpModal").classList.add("open");
 };
 
 document.getElementById("addEmpBtn").addEventListener("click",()=>document.getElementById("addEmpModal").classList.add("open"));
@@ -686,6 +697,64 @@ document.querySelectorAll(".nav-item").forEach(item => {
 // PWA service worker
 if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
 
+
+// ── EDIT EMPLOYEE MODAL ────────────────────────────────────────────────────
+document.getElementById("cancelEditEmpBtn").addEventListener("click",()=>document.getElementById("editEmpModal").classList.remove("open"));
+document.getElementById("saveEditEmpBtn").addEventListener("click",async()=>{
+  const id = document.getElementById("ee-id").value;
+  const updates = {
+    full_name:           document.getElementById("ee-full_name").value.trim()||null,
+    designation:         document.getElementById("ee-designation").value.trim()||null,
+    department:          document.getElementById("ee-department").value.trim()||null,
+    gender:              document.getElementById("ee-gender").value||null,
+    date_of_birth:       document.getElementById("ee-date_of_birth").value||null,
+    marital_status:      document.getElementById("ee-marital_status").value||null,
+    blood_group:         document.getElementById("ee-blood_group").value||null,
+    joining_date:        document.getElementById("ee-joining_date").value||null,
+    mobile_no:           document.getElementById("ee-mobile_no").value.trim()||null,
+    emergency_mobile_no: document.getElementById("ee-emergency_mobile_no").value.trim()||null,
+    address:             document.getElementById("ee-address").value.trim()||null,
+  };
+  const btn=document.getElementById("saveEditEmpBtn");
+  btn.disabled=true; btn.textContent="Saving…";
+  const{error}=await supabase.from("profiles").update(updates).eq("id",id);
+  if(error){notify("Error: "+error.message,"error");}
+  else{notify("Employee profile updated!","success");document.getElementById("editEmpModal").classList.remove("open");loadEmployees();}
+  btn.disabled=false; btn.textContent="Save Changes";
+});
+
 </script>
+
+<!-- EDIT EMPLOYEE MODAL -->
+<div class="modal-overlay" id="editEmpModal">
+  <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
+    <div class="modal-title">✏️ Edit Employee Profile</div>
+    <input type="hidden" id="ee-id">
+    <div class="form-grid">
+      <div class="form-group"><label>Full Name</label><input type="text" id="ee-full_name" placeholder="Full name"></div>
+      <div class="form-group"><label>Designation</label><input type="text" id="ee-designation" placeholder="e.g. Software Engineer"></div>
+      <div class="form-group"><label>Department</label><input type="text" id="ee-department" placeholder="e.g. Engineering"></div>
+      <div class="form-group"><label>Gender</label>
+        <select id="ee-gender"><option value="">Select…</option><option value="Male">Male</option><option value="Female">Female</option><option value="Other">Other</option></select>
+      </div>
+      <div class="form-group"><label>Date of Birth</label><input type="date" id="ee-date_of_birth"></div>
+      <div class="form-group"><label>Marital Status</label>
+        <select id="ee-marital_status"><option value="">Select…</option><option value="Single">Single</option><option value="Married">Married</option><option value="Divorced">Divorced</option><option value="Widowed">Widowed</option></select>
+      </div>
+      <div class="form-group"><label>Blood Group</label>
+        <select id="ee-blood_group"><option value="">Select…</option><option value="A+">A+</option><option value="A-">A-</option><option value="B+">B+</option><option value="B-">B-</option><option value="O+">O+</option><option value="O-">O-</option><option value="AB+">AB+</option><option value="AB-">AB-</option></select>
+      </div>
+      <div class="form-group"><label>Joining Date</label><input type="date" id="ee-joining_date"></div>
+      <div class="form-group"><label>Mobile No</label><input type="tel" id="ee-mobile_no" placeholder="+880 1XXX XXXXXX"></div>
+      <div class="form-group"><label>Emergency Mobile</label><input type="tel" id="ee-emergency_mobile_no" placeholder="+880 1XXX XXXXXX"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Address</label><input type="text" id="ee-address" placeholder="Full address"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelEditEmpBtn">Cancel</button>
+      <button class="btn btn-primary" id="saveEditEmpBtn">Save Changes</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
