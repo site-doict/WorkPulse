@@ -407,6 +407,11 @@ async function markOut(userId) {
 const user=await checkSession();
 if(!user)throw new Error("No session");
 
+// ── ROLE CHECK: redirect admins away from employee dashboard ──────────────
+const {data:roleCheck} = await supabase.from("profiles").select("role").eq("id",user.id).single();
+if(roleCheck?.role==="super_admin")   { window.location.href="super.html"; throw new Error("redirect"); }
+if(roleCheck?.role==="company_admin") { window.location.href="company-admin.html"; throw new Error("redirect"); }
+
 document.getElementById("user-email").textContent=user.email;
 loadProfile(user.id, user.email);
 loadAndRender(user.id);
