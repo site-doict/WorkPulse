@@ -404,8 +404,9 @@ async function markOut(userId) {
   return true;
 }
 
+(async () => {
 const user=await checkSession();
-if(!user)throw new Error("No session");
+if(!user) return;
 
 // ── ROLE CHECK: redirect admins away from employee dashboard ──────────────
 const {data:roleCheck} = await supabase.from("profiles").select("role").eq("id",user.id).single();
@@ -582,6 +583,7 @@ document.getElementById("savePassBtn").addEventListener("click", async () => {
 document.getElementById("profileLogoutBtn").addEventListener("click",()=>{notify("Signing out…","info");setTimeout(logoutUser,700);});
 
 document.getElementById("logoutBtn").addEventListener("click",()=>{notify("Signing out…","info");setTimeout(logoutUser,700);});
+})();
 </script>
 </body>
 </html>
