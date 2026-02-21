@@ -540,10 +540,20 @@ try {
 
   window.deleteEmp = async (id, name) => {
     if(!confirm("⚠️ Permanently delete \""+name+"\"?\n\nThis will delete their profile AND all attendance records.\nThis CANNOT be undone!")) return;
+    // Delete attendance records first
     await supabase.from("attendance").delete().eq("user_id", id);
-    const {error}=await supabase.from("profiles").delete().eq("id",id);
-    if(error){notify("Error: "+error.message,"error");return;}
-    notify(name+" permanently deleted.","success"); loadEmployees();
+    // Delete profile - use select() to confirm rows were actually deleted
+    const {data:deleted, error:profErr} = await supabase.from("profiles").delete().eq("id", id).select();
+    if(profErr) {
+      notify("Delete failed: "+profErr.message,"error");
+      return;
+    }
+    if(!deleted || deleted.length === 0) {
+      notify("Delete blocked by permissions. Ask your super admin to run this SQL in Supabase:\nCREATE POLICY \"admin_delete_emp\" ON profiles FOR DELETE USING (auth.uid() IN (SELECT id FROM profiles p2 WHERE p2.company_id = profiles.company_id AND p2.role = \'company_admin\'));","error");
+      return;
+    }
+    notify(name+" deleted successfully.","success");
+    loadEmployees();
   };
 
   document.getElementById("addEmpBtn").addEventListener("click",()=>document.getElementById("addEmpModal").classList.add("open"));
