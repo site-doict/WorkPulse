@@ -927,7 +927,7 @@ window.viewUser = (id) => {
 };
 
 window.deleteUser = async (id, name) => {
-  if(!confirm("⚠️ Permanently delete ""+name+""?\n\nThis will delete their profile AND all attendance records.\nThis CANNOT be undone!")) return;
+  if(!confirm("Permanently delete " + name + "?\n\nThis deletes their profile AND attendance records.\nCannot be undone!")) return;
   await supabase.from("attendance").delete().eq("user_id", id);
   const {error}=await supabase.from("profiles").delete().eq("id",id);
   if(error){notify("Error: "+error.message,"error");return;}
@@ -1056,10 +1056,20 @@ sidebarOverlay.addEventListener("click", () => {
 });
 document.querySelectorAll(".nav-item").forEach(item => {
   item.addEventListener("click", () => {
+    document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p => p.classList.remove("active"));
+    item.classList.add("active");
+    document.getElementById("page-" + item.dataset.page).classList.add("active");
     if (window.innerWidth <= 768) {
       sidebar.classList.remove("open");
       sidebarOverlay.classList.remove("open");
     }
+    const p = item.dataset.page;
+    if (p === "dashboard")  loadDashboard();
+    if (p === "companies")  loadCompanies();
+    if (p === "users")      loadUsers();
+    if (p === "attendance") loadAttendancePage();
+    if (p === "expiring")   loadExpiring();
   });
 });
 if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
