@@ -1,4 +1,4 @@
-const CACHE_NAME = "workpulse-v1";
+const CACHE_NAME = "workpulse-v3";
 const STATIC_ASSETS = [
   "/WorkPulse/",
   "/WorkPulse/index.html",
