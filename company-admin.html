@@ -709,31 +709,6 @@ document.querySelectorAll(".nav-item").forEach(item => {
 if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
 
 
-// ── EDIT EMPLOYEE MODAL ────────────────────────────────────────────────────
-document.getElementById("cancelEditEmpBtn").addEventListener("click",()=>document.getElementById("editEmpModal").classList.remove("open"));
-document.getElementById("saveEditEmpBtn").addEventListener("click",async()=>{
-  const id = document.getElementById("ee-id").value;
-  const updates = {
-    full_name:           document.getElementById("ee-full_name").value.trim()||null,
-    designation:         document.getElementById("ee-designation").value.trim()||null,
-    department:          document.getElementById("ee-department").value.trim()||null,
-    gender:              document.getElementById("ee-gender").value||null,
-    date_of_birth:       document.getElementById("ee-date_of_birth").value||null,
-    marital_status:      document.getElementById("ee-marital_status").value||null,
-    blood_group:         document.getElementById("ee-blood_group").value||null,
-    joining_date:        document.getElementById("ee-joining_date").value||null,
-    mobile_no:           document.getElementById("ee-mobile_no").value.trim()||null,
-    emergency_mobile_no: document.getElementById("ee-emergency_mobile_no").value.trim()||null,
-    address:             document.getElementById("ee-address").value.trim()||null,
-  };
-  const btn=document.getElementById("saveEditEmpBtn");
-  btn.disabled=true; btn.textContent="Saving…";
-  const{error}=await supabase.from("profiles").update(updates).eq("id",id);
-  if(error){notify("Error: "+error.message,"error");}
-  else{notify("Employee profile updated!","success");document.getElementById("editEmpModal").classList.remove("open");loadEmployees();}
-  btn.disabled=false; btn.textContent="Save Changes";
-});
-
 </script>
 
 <!-- EDIT EMPLOYEE MODAL -->
@@ -766,6 +741,40 @@ document.getElementById("saveEditEmpBtn").addEventListener("click",async()=>{
     </div>
   </div>
 </div>
-
+<script type="module">
+import { supabase } from "./js/config.js";
+async function loadEmployeesRef() {
+  // Re-use global loadEmployees if available
+  if (typeof loadEmployees === "function") { loadEmployees(); return; }
+  window.location.reload();
+}
+document.getElementById("cancelEditEmpBtn").addEventListener("click",()=>document.getElementById("editEmpModal").classList.remove("open"));
+document.getElementById("saveEditEmpBtn").addEventListener("click",async()=>{
+  const id = document.getElementById("ee-id").value;
+  const updates = {
+    full_name:           document.getElementById("ee-full_name").value.trim()||null,
+    designation:         document.getElementById("ee-designation").value.trim()||null,
+    department:          document.getElementById("ee-department").value.trim()||null,
+    gender:              document.getElementById("ee-gender").value||null,
+    date_of_birth:       document.getElementById("ee-date_of_birth").value||null,
+    marital_status:      document.getElementById("ee-marital_status").value||null,
+    blood_group:         document.getElementById("ee-blood_group").value||null,
+    joining_date:        document.getElementById("ee-joining_date").value||null,
+    mobile_no:           document.getElementById("ee-mobile_no").value.trim()||null,
+    emergency_mobile_no: document.getElementById("ee-emergency_mobile_no").value.trim()||null,
+    address:             document.getElementById("ee-address").value.trim()||null,
+  };
+  const btn=document.getElementById("saveEditEmpBtn");
+  btn.disabled=true; btn.textContent="Saving…";
+  const{error}=await supabase.from("profiles").update(updates).eq("id",id);
+  if(error){
+    alert("Error: "+error.message);
+  } else {
+    document.getElementById("editEmpModal").classList.remove("open");
+    window.location.reload();
+  }
+  btn.disabled=false; btn.textContent="Save Changes";
+});
+</script>
 </body>
 </html>
