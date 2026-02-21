@@ -553,11 +553,12 @@ document.querySelectorAll(".nav-item").forEach(item=>{
 });
 
 // ── INIT ──────────────────────────────────────────────────────────────────
+(async () => {
 const user = await checkSession();
-if (!user) throw new Error("no session");
+if (!user) return;
 
 const {data:profile} = await supabase.from("profiles").select("role").eq("id",user.id).single();
-if (!profile || profile.role !== "super_admin") { window.location.href="dashboard.html"; }
+if (!profile || profile.role !== "super_admin") { window.location.href="dashboard.html"; return; }
 
 document.getElementById("adminEmail").textContent = user.email;
 document.getElementById("dashDate").textContent = new Date().toLocaleDateString("en-US",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Dhaka"});
@@ -1078,7 +1079,7 @@ document.querySelectorAll(".nav-item").forEach(item => {
   });
 });
 if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
-
+})();
 </script>
 
 <!-- VIEW USER PROFILE MODAL -->
