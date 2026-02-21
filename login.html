@@ -1,96 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WorkPulse Login</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #141e30, #243b55);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#63b3ed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="WorkPulse">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>WorkPulse — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0a0f1e; --surface: #0f1629; --surface2: #151d35;
+    --border: rgba(99,179,237,0.15); --accent: #63b3ed; --accent2: #4fd1c5;
+    --green: #48bb78; --red: #fc8181; --yellow: #f6e05e;
+    --text: #e2e8f0; --muted: #718096;
+    --font: 'Syne', sans-serif; --mono: 'JetBrains Mono', monospace;
+  }
+  body {
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(99,179,237,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(99,179,237,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  body::after {
+    content: '';
+    position: fixed; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(99,179,237,0.07) 0%, transparent 60%);
+    pointer-events: none;
+  }
 
-    .card {
-      background: #ffffff;
-      padding: 40px;
-      border-radius: 10px;
-      width: 320px;
-      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-      text-align: center;
-    }
+  .container { position: relative; z-index: 1; width: 100%; max-width: 400px; }
 
-    h2 { margin-bottom: 20px; color: #243b55; }
+  /* BRAND */
+  .brand { text-align: center; margin-bottom: 32px; }
+  .brand-icon {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 14px;
+    box-shadow: 0 8px 32px rgba(99,179,237,0.3);
+  }
+  .brand-name { font-size: 28px; font-weight: 800; background: linear-gradient(90deg, var(--accent), var(--accent2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 4px; }
+  .brand-sub { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 2px; }
 
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 14px;
-    }
+  /* CARD */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), transparent);
+  }
+  .card-title { font-size: 20px; font-weight: 800; margin-bottom: 6px; }
+  .card-sub { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-bottom: 28px; }
 
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      background: #243b55;
-      color: white;
-      border: none;
-      border-radius: 6px;
-      font-size: 15px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
+  /* FORM */
+  .form-group { margin-bottom: 18px; }
+  label { display: block; font-family: var(--mono); font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; margin-bottom: 7px; }
+  input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid rgba(99,179,237,0.15);
+    border-radius: 10px;
+    padding: 13px 16px;
+    font-family: var(--mono);
+    font-size: 14px;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99,179,237,0.1); }
+  input::placeholder { color: var(--muted); }
 
-    button:hover { background: #141e30; }
+  /* BUTTON */
+  .btn-login {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #0a0f1e;
+    border: none;
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+    letter-spacing: 0.3px;
+    position: relative;
+    overflow: hidden;
+  }
+  .btn-login:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,179,237,0.35); }
+  .btn-login:active { transform: scale(0.98); }
+  .btn-login:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-login .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(10,15,30,0.3); border-top-color: #0a0f1e; border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto; }
+  .btn-login.loading .btn-text { display: none; }
+  .btn-login.loading .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 
-    .brand { margin-bottom: 20px; font-weight: bold; font-size: 18px; color: #243b55; }
-    .error { color: red; font-size: 13px; margin-top: 10px; }
-  </style>
+  /* MESSAGES */
+  .msg {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    display: none;
+    align-items: flex-start;
+    gap: 10px;
+    line-height: 1.5;
+  }
+  .msg.show { display: flex; }
+  .msg.error   { background: rgba(252,129,129,0.1); border: 1px solid rgba(252,129,129,0.25); color: #fca5a5; }
+  .msg.warning { background: rgba(246,224,94,0.1);  border: 1px solid rgba(246,224,94,0.25);  color: #fef08a; }
+  .msg.success { background: rgba(72,187,120,0.1);  border: 1px solid rgba(72,187,120,0.25);  color: #86efac; }
+  .msg-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+</style>
 </head>
 <body>
-
-  <div class="card">
-    <div class="brand">WorkPulse</div>
-    <h2>Login</h2>
-
-    <input type="email" id="email" placeholder="Email" />
-    <input type="password" id="password" placeholder="Password" />
-
-    <button id="loginBtn">Login</button>
-    <div id="error" class="error"></div>
+<div class="container">
+  <div class="brand">
+    <div class="brand-icon">⚡</div>
+    <div class="brand-name">WorkPulse</div>
+    <div class="brand-sub">ATTENDANCE SYSTEM</div>
   </div>
 
-  <script type="module">
-    import { loginUser } from "./js/auth.js";
+  <div class="card">
+    <div class="card-title">Welcome back</div>
+    <div class="card-sub">Sign in to your account</div>
 
-    document.getElementById("loginBtn").addEventListener("click", async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
+    <div class="form-group">
+      <label>Email Address</label>
+      <input type="email" id="email" placeholder="you@company.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+    </div>
 
-      const { error, role, userId } = await loginUser(email, password);
+    <button class="btn-login" id="loginBtn">
+      <span class="btn-text">Sign In</span>
+      <div class="spinner"></div>
+    </button>
 
-      if (error) {
-        document.getElementById("error").innerText = error.message;
-        return;
+    <div class="msg error" id="msgError">
+      <span class="msg-icon">✕</span>
+      <span id="msgErrorText">Invalid email or password.</span>
+    </div>
+    <div class="msg warning" id="msgSuspended">
+      <span class="msg-icon">⚠️</span>
+      <span>Your company account has been <strong>suspended</strong>. Please contact your service provider to restore access.</span>
+    </div>
+    <div class="msg warning" id="msgExpired">
+      <span class="msg-icon">⏳</span>
+      <span>Your company subscription has <strong>expired</strong>. Please contact your service provider to renew.</span>
+    </div>
+    <div class="msg error" id="msgInactive">
+      <span class="msg-icon">🚫</span>
+      <span>Your account has been <strong>deactivated</strong>. Please contact your company admin.</span>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { loginUser, supabase } from "./js/auth.js";
+
+const emailInput    = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const loginBtn      = document.getElementById("loginBtn");
+
+function showMsg(id) {
+  ["msgError","msgSuspended","msgExpired","msgInactive"].forEach(m => {
+    document.getElementById(m).classList.remove("show");
+  });
+  if (id) document.getElementById(id).classList.add("show");
+}
+
+async function doLogin() {
+  const email    = emailInput.value.trim();
+  const password = passwordInput.value;
+
+  if (!email || !password) {
+    document.getElementById("msgErrorText").textContent = "Please enter your email and password.";
+    showMsg("msgError"); return;
+  }
+
+  loginBtn.classList.add("loading");
+  loginBtn.disabled = true;
+  showMsg(null);
+
+  try {
+    const { error, role, userId } = await loginUser(email, password);
+
+    if (error) {
+      document.getElementById("msgErrorText").textContent = error.message || "Invalid email or password.";
+      showMsg("msgError");
+      loginBtn.classList.remove("loading"); loginBtn.disabled = false;
+      return;
+    }
+
+    // Super admin — no company check needed
+    if (role === "super_admin") {
+      window.location.href = "super.html"; return;
+    }
+
+    // Get profile with company_id and is_active
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("company_id, is_active")
+      .eq("id", userId)
+      .single();
+
+    // Check if user is deactivated
+    if (profile && profile.is_active === false) {
+      await supabase.auth.signOut();
+      showMsg("msgInactive");
+      loginBtn.classList.remove("loading"); loginBtn.disabled = false;
+      return;
+    }
+
+    // Check company status if user belongs to a company
+    if (profile && profile.company_id) {
+      const { data: company } = await supabase
+        .from("companies")
+        .select("status, subscription_ends_at")
+        .eq("id", profile.company_id)
+        .single();
+
+      if (company) {
+        // Check suspended
+        if (company.status === "suspended") {
+          await supabase.auth.signOut();
+          showMsg("msgSuspended");
+          loginBtn.classList.remove("loading"); loginBtn.disabled = false;
+          return;
+        }
+
+        // Check subscription expired
+        if (company.subscription_ends_at) {
+          const expired = new Date(company.subscription_ends_at) < new Date();
+          if (expired) {
+            await supabase.auth.signOut();
+            showMsg("msgExpired");
+            loginBtn.classList.remove("loading"); loginBtn.disabled = false;
+            return;
+          }
+        }
       }
+    }
 
-          if (role === "super_admin") {
-      window.location.href = "super.html";
-    } else if (role === "company_admin") {
-      window.location.href = "company-admin.html";  // add this
+    // All checks passed — redirect
+    if (role === "company_admin") {
+      window.location.href = "company-admin.html";
     } else {
       window.location.href = "dashboard.html";
-    }  
-    });
-  </script>
+    }
 
+  } catch(err) {
+    document.getElementById("msgErrorText").textContent = "Network error. Please try again.";
+    showMsg("msgError");
+    loginBtn.classList.remove("loading"); loginBtn.disabled = false;
+  }
+}
+
+loginBtn.addEventListener("click", doLogin);
+
+// Allow Enter key to submit
+[emailInput, passwordInput].forEach(el => {
+  el.addEventListener("keydown", e => { if (e.key === "Enter") doLogin(); });
+});
+</script>
 </body>
 </html>
-
