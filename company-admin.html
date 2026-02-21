@@ -396,21 +396,6 @@ function isLate(t,start,grace) {
   return (bd.getUTCHours()*60+bd.getUTCMinutes())>(oh*60+om+(grace||15));
 }
 
-document.querySelectorAll(".nav-item").forEach(item=>{
-  item.addEventListener("click",()=>{
-    document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    item.classList.add("active");
-    document.getElementById("page-"+item.dataset.page).classList.add("active");
-    const p=item.dataset.page;
-    if(p==="today")      loadTodayStatus();
-    if(p==="employees")  loadEmployees();
-    if(p==="attendance") loadAttendancePage();
-    if(p==="reports")    initReports();
-    if(p==="settings")   loadSettings();
-  });
-});
-
 // ========== DEBUG MODE START ==========
 console.log("🔍 Starting admin.html script...");
 
@@ -823,6 +808,22 @@ try {
   });
 
   console.log("✅ Admin script loaded successfully!");
+
+  // ========== NAVIGATION EVENT LISTENERS (Must be inside try-catch) ==========
+  document.querySelectorAll(".nav-item").forEach(item=>{
+    item.addEventListener("click",()=>{
+      document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
+      document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+      item.classList.add("active");
+      document.getElementById("page-"+item.dataset.page).classList.add("active");
+      const p=item.dataset.page;
+      if(p==="today")      loadTodayStatus();
+      if(p==="employees")  loadEmployees();
+      if(p==="attendance") loadAttendancePage();
+      if(p==="reports")    initReports();
+      if(p==="settings")   loadSettings();
+    });
+  });
 
 } catch(err) {
   console.error("💥 FATAL ERROR:", err);
