@@ -135,7 +135,7 @@
   }
 </style>
 </head>
-<body style='visibility:hidden'>
+<body>
 <div id="notif-container"></div>
 
 <div id="installBanner">
@@ -411,8 +411,6 @@ if(!user)throw new Error("No session");
 const {data:roleCheck} = await supabase.from("profiles").select("role").eq("id",user.id).single();
 if(roleCheck?.role==="super_admin")   { window.location.href="super.html"; return; }
 if(roleCheck?.role==="company_admin") { window.location.href="company-admin.html"; return; }
-// Employee confirmed — show the page
-document.body.style.visibility="visible";
 
 document.getElementById("user-email").textContent=user.email;
 loadProfile(user.id, user.email);
