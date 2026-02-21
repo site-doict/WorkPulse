@@ -204,11 +204,20 @@
 
   <!-- PROFILE SECTION -->
   <div id="profileSection" style="display:none">
-    <div class="profile-card">
+
+    <!-- COMPLETION BANNER -->
+    <div id="profileIncompleteBanner" style="display:none;margin-bottom:14px;padding:12px 16px;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:12px;font-family:var(--font-m);font-size:12px;color:#fde68a;display:none;align-items:center;gap:10px">
+      <span style="font-size:16px">⚠️</span>
+      <span>Your profile is incomplete. Please fill in the missing information below.</span>
+    </div>
+
+    <!-- PROFILE HEADER CARD -->
+    <div class="profile-card" style="margin-bottom:14px">
       <div class="profile-header">
         <div class="profile-avatar">👤</div>
         <div>
           <div class="profile-name" id="profileName">—</div>
+          <div id="profileDesignation" style="font-family:var(--font-m);font-size:11px;color:var(--accent);margin-top:2px">—</div>
           <div class="profile-email" id="profileEmail">—</div>
           <div class="profile-company" id="profileCompany">—</div>
         </div>
@@ -217,18 +226,84 @@
         <div class="profile-stat"><div class="profile-stat-label">This Month</div><div class="profile-stat-value" id="profilePresent">—</div><div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Days Present</div></div>
         <div class="profile-stat"><div class="profile-stat-label">Today</div><div class="profile-stat-value" id="profileToday" style="color:var(--green)">—</div><div style="font-family:var(--font-m);font-size:10px;color:var(--muted)">Status</div></div>
       </div>
+    </div>
 
-      <hr class="profile-divider">
-      <div class="profile-section-title">✏️ Update Name</div>
-      <div class="form-group">
-        <label class="form-label">Full Name</label>
-        <input type="text" class="form-input" id="profileNameInput" placeholder="Your full name">
-      </div>
-      <div class="btn-row">
-        <button class="btn-save btn-primary-s" id="saveNameBtn">Save Name</button>
-      </div>
+    <!-- PROFILE INFO CARD -->
+    <div class="profile-card" style="margin-bottom:14px">
+      <div class="profile-section-title">📋 Personal Information</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="profileInfoGrid">
 
-      <hr class="profile-divider">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" class="form-input" id="pf-full_name" placeholder="Your full name">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Designation</label>
+          <input type="text" class="form-input" id="pf-designation" placeholder="e.g. Software Engineer">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Department</label>
+          <input type="text" class="form-input" id="pf-department" placeholder="e.g. Engineering">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Gender</label>
+          <select class="form-input" id="pf-gender">
+            <option value="">Select…</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Date of Birth</label>
+          <input type="date" class="form-input" id="pf-date_of_birth">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Marital Status</label>
+          <select class="form-input" id="pf-marital_status">
+            <option value="">Select…</option>
+            <option value="Single">Single</option>
+            <option value="Married">Married</option>
+            <option value="Divorced">Divorced</option>
+            <option value="Widowed">Widowed</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Blood Group</label>
+          <select class="form-input" id="pf-blood_group">
+            <option value="">Select…</option>
+            <option value="A+">A+</option><option value="A-">A-</option>
+            <option value="B+">B+</option><option value="B-">B-</option>
+            <option value="O+">O+</option><option value="O-">O-</option>
+            <option value="AB+">AB+</option><option value="AB-">AB-</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Joining Date</label>
+          <input type="date" class="form-input" id="pf-joining_date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Mobile No</label>
+          <input type="tel" class="form-input" id="pf-mobile_no" placeholder="+880 1XXX XXXXXX">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Emergency Mobile</label>
+          <input type="tel" class="form-input" id="pf-emergency_mobile_no" placeholder="+880 1XXX XXXXXX">
+        </div>
+        <div class="form-group" style="grid-column:1/-1">
+          <label class="form-label">Address</label>
+          <input type="text" class="form-input" id="pf-address" placeholder="Full address">
+        </div>
+
+      </div>
+      <div style="margin-top:16px">
+        <button class="btn-save btn-primary-s" id="saveProfileBtn">💾 Save Profile</button>
+      </div>
+      <div id="profileNote" style="margin-top:10px;font-family:var(--font-m);font-size:11px;color:var(--muted)"></div>
+    </div>
+
+    <!-- CHANGE PASSWORD CARD -->
+    <div class="profile-card">
       <div class="profile-section-title">🔑 Change Password</div>
       <div class="form-group">
         <label class="form-label">New Password</label>
@@ -243,8 +318,7 @@
         <button class="btn-save" style="background:rgba(252,129,129,0.1);color:var(--red);border:1px solid rgba(252,129,129,0.2)" id="profileLogoutBtn">Sign Out</button>
       </div>
     </div>
-  </div>
-</div>
+  </div></div>
 
 <script type="module">
 import { checkSession, logoutUser, supabase } from "./js/auth.js";
@@ -341,86 +415,166 @@ document.getElementById("inBtn").addEventListener("click",async()=>{const btn=do
 document.getElementById("outBtn").addEventListener("click",async()=>{const btn=document.getElementById("outBtn");btn.disabled=true;const ok=await markOut(user.id);if(ok)await loadAndRender(user.id);btn.disabled=false;});
 
 // ── BOTTOM NAV ────────────────────────────────────────────────────────────
-const homeSection    = document.querySelector(".wrapper > *:not(#profileSection):not(#installBanner):not(#notif-container)");
-const profileSection = document.getElementById("profileSection");
-
 document.querySelectorAll(".bottom-nav-item").forEach(btn => {
   btn.addEventListener("click", () => {
     document.querySelectorAll(".bottom-nav-item").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
     if (btn.dataset.section === "profile") {
-      // Hide main content, show profile
       document.querySelectorAll(".topbar, .clock-card, .actions-row, .table-card").forEach(el => el.style.display = "none");
-      profileSection.style.display = "block";
+      document.getElementById("profileSection").style.display = "block";
     } else {
       document.querySelectorAll(".topbar, .clock-card, .actions-row, .table-card").forEach(el => el.style.display = "");
-      profileSection.style.display = "none";
+      document.getElementById("profileSection").style.display = "none";
     }
   });
 });
-
 document.getElementById("profileNavBtn")?.addEventListener("click", () => {
   document.querySelectorAll(".bottom-nav-item").forEach(b => b.classList.remove("active"));
   document.querySelector("[data-section='profile']").classList.add("active");
   document.querySelectorAll(".topbar, .clock-card, .actions-row, .table-card").forEach(el => el.style.display = "none");
-  profileSection.style.display = "block";
+  document.getElementById("profileSection").style.display = "block";
 });
 
-// ── LOAD PROFILE ──────────────────────────────────────────────────────────
+// ── PROFILE FIELDS & RULES ────────────────────────────────────────────────
+// Fields employee can fill but NOT change once set
+const LOCKED_FIELDS = ["pf-full_name","pf-designation","pf-department","pf-gender",
+  "pf-date_of_birth","pf-marital_status","pf-blood_group","pf-joining_date",
+  "pf-mobile_no","pf-emergency_mobile_no","pf-address"];
+
+let currentProfile = null; // store fetched profile
+
 async function loadProfile(userId, userEmail) {
   document.getElementById("profileEmail").textContent = userEmail;
 
-  const { data: prof } = await supabase.from("profiles").select("full_name, company_id").eq("id", userId).single();
+  const { data: prof } = await supabase.from("profiles")
+    .select("full_name,designation,department,gender,date_of_birth,mobile_no,emergency_mobile_no,marital_status,blood_group,address,joining_date,company_id")
+    .eq("id", userId).single();
+
   if (prof) {
+    currentProfile = prof;
+
+    // Header
     document.getElementById("profileName").textContent = prof.full_name || "—";
-    document.getElementById("profileNameInput").value  = prof.full_name || "";
+    document.getElementById("profileDesignation").textContent = prof.designation ? "💼 "+prof.designation : "";
+
+    // Company name
     if (prof.company_id) {
       const { data: co } = await supabase.from("companies").select("name").eq("id", prof.company_id).single();
       if (co) document.getElementById("profileCompany").textContent = "🏢 " + co.name;
     }
+
+    // Fill form fields
+    const fieldMap = {
+      "pf-full_name":            prof.full_name,
+      "pf-designation":          prof.designation,
+      "pf-department":           prof.department,
+      "pf-gender":               prof.gender,
+      "pf-date_of_birth":        prof.date_of_birth,
+      "pf-marital_status":       prof.marital_status,
+      "pf-blood_group":          prof.blood_group,
+      "pf-joining_date":         prof.joining_date,
+      "pf-mobile_no":            prof.mobile_no,
+      "pf-emergency_mobile_no":  prof.emergency_mobile_no,
+      "pf-address":              prof.address,
+    };
+    Object.entries(fieldMap).forEach(([id, val]) => {
+      const el = document.getElementById(id);
+      if (el && val) el.value = val;
+    });
+
+    // LOCK fields that already have data — employee cannot change them
+    let allFilled = true;
+    LOCKED_FIELDS.forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const val = prof[id.replace("pf-","")];
+      if (val) {
+        el.disabled = true;
+        el.style.opacity = "0.6";
+        el.style.cursor  = "not-allowed";
+      } else {
+        allFilled = false;
+      }
+    });
+
+    // Show incomplete banner if profile has empty required fields
+    const required = ["full_name","mobile_no","designation"];
+    const incomplete = required.some(f => !prof[f]);
+    if (incomplete) {
+      const banner = document.getElementById("profileIncompleteBanner");
+      banner.style.display = "flex";
+    }
+
+    // Note
+    const noteEl = document.getElementById("profileNote");
+    noteEl.textContent = "ℹ️ Fields already filled are locked. Contact your admin to update them.";
   }
 
   // This month present count
-  const now = new Date();
-  const from = now.toLocaleDateString("en-CA", {timeZone:"Asia/Dhaka"}).substring(0,7) + "-01";
-  const { data: attMonth } = await supabase.from("attendance").select("id").eq("user_id", userId).gte("date", from);
-  document.getElementById("profilePresent").textContent = (attMonth?.length || 0) + " days";
+  const from = new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"}).substring(0,7)+"-01";
+  const { data: attMonth } = await supabase.from("attendance").select("id").eq("user_id",userId).gte("date",from);
+  document.getElementById("profilePresent").textContent = (attMonth?.length||0)+" days";
 
   // Today status
-  const today = new Date().toLocaleDateString("en-CA", {timeZone:"Asia/Dhaka"});
-  const { data: attToday } = await supabase.from("attendance").select("in_time, out_time").eq("user_id", userId).eq("date", today).maybeSingle();
-  if (!attToday) document.getElementById("profileToday").textContent = "Not In";
-  else if (attToday.in_time && !attToday.out_time) { document.getElementById("profileToday").textContent = "Checked In"; document.getElementById("profileToday").style.color = "var(--green)"; }
-  else if (attToday.out_time) { document.getElementById("profileToday").textContent = "Checked Out"; document.getElementById("profileToday").style.color = "var(--accent)"; }
+  const today = new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"});
+  const { data: attToday } = await supabase.from("attendance").select("in_time,out_time").eq("user_id",userId).eq("date",today).maybeSingle();
+  const todayEl = document.getElementById("profileToday");
+  if (!attToday)                         { todayEl.textContent="Not In";      todayEl.style.color="var(--muted)"; }
+  else if (attToday.in_time&&!attToday.out_time) { todayEl.textContent="Checked In";  todayEl.style.color="var(--green)"; }
+  else if (attToday.out_time)            { todayEl.textContent="Checked Out"; todayEl.style.color="var(--accent)"; }
 }
 
-// ── SAVE NAME ─────────────────────────────────────────────────────────────
-document.getElementById("saveNameBtn").addEventListener("click", async () => {
-  const name = document.getElementById("profileNameInput").value.trim();
-  if (!name) { notify("Please enter your name", "error"); return; }
-  const btn = document.getElementById("saveNameBtn");
+// ── SAVE PROFILE (only empty fields) ─────────────────────────────────────
+document.getElementById("saveProfileBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("saveProfileBtn");
   btn.disabled = true; btn.textContent = "Saving…";
-  const { error } = await supabase.from("profiles").update({ full_name: name }).eq("id", user.id);
-  if (error) { notify("Error: " + error.message, "error"); }
-  else { notify("Name updated!", "success"); document.getElementById("profileName").textContent = name; }
-  btn.disabled = false; btn.textContent = "Save Name";
+
+  // Build update object — only include fields that are currently ENABLED (not locked)
+  const updates = {};
+  LOCKED_FIELDS.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && !el.disabled && el.value.trim()) {
+      updates[id.replace("pf-","")] = el.value.trim();
+    }
+  });
+
+  if (!Object.keys(updates).length) {
+    notify("No new fields to save","info");
+    btn.disabled=false; btn.textContent="💾 Save Profile"; return;
+  }
+
+  const { error } = await supabase.from("profiles").update(updates).eq("id", user.id);
+  if (error) { notify("Error: "+error.message,"error"); }
+  else {
+    notify("Profile saved!","success");
+    // Update header
+    if (updates.full_name) document.getElementById("profileName").textContent = updates.full_name;
+    if (updates.designation) document.getElementById("profileDesignation").textContent = "💼 "+updates.designation;
+    // Lock newly saved fields
+    Object.keys(updates).forEach(field => {
+      const el = document.getElementById("pf-"+field);
+      if (el) { el.disabled=true; el.style.opacity="0.6"; el.style.cursor="not-allowed"; }
+    });
+    document.getElementById("profileIncompleteBanner").style.display = "none";
+  }
+  btn.disabled=false; btn.textContent="💾 Save Profile";
 });
 
 // ── CHANGE PASSWORD ───────────────────────────────────────────────────────
 document.getElementById("savePassBtn").addEventListener("click", async () => {
   const newPass  = document.getElementById("newPassInput").value;
   const confPass = document.getElementById("confirmPassInput").value;
-  if (!newPass || newPass.length < 6) { notify("Password must be at least 6 characters", "error"); return; }
-  if (newPass !== confPass) { notify("Passwords do not match", "error"); return; }
+  if (!newPass||newPass.length<6) { notify("Password must be at least 6 characters","error"); return; }
+  if (newPass!==confPass) { notify("Passwords do not match","error"); return; }
   const btn = document.getElementById("savePassBtn");
-  btn.disabled = true; btn.textContent = "Updating…";
+  btn.disabled=true; btn.textContent="Updating…";
   const { error } = await supabase.auth.updateUser({ password: newPass });
-  if (error) { notify("Error: " + error.message, "error"); }
-  else { notify("Password changed successfully!", "success"); document.getElementById("newPassInput").value = ""; document.getElementById("confirmPassInput").value = ""; }
-  btn.disabled = false; btn.textContent = "Change Password";
+  if (error) { notify("Error: "+error.message,"error"); }
+  else { notify("Password changed!","success"); document.getElementById("newPassInput").value=""; document.getElementById("confirmPassInput").value=""; }
+  btn.disabled=false; btn.textContent="Change Password";
 });
 
-document.getElementById("profileLogoutBtn").addEventListener("click", () => { notify("Signing out…", "info"); setTimeout(logoutUser, 700); });
+document.getElementById("profileLogoutBtn").addEventListener("click",()=>{notify("Signing out…","info");setTimeout(logoutUser,700);});
 
 document.getElementById("logoutBtn").addEventListener("click",()=>{notify("Signing out…","info");setTimeout(logoutUser,700);});
 </script>
