@@ -29,10 +29,9 @@
   .notif { display:flex; align-items:center; gap:10px; padding:12px 18px; border-radius:10px; font-family:var(--mono); font-size:12px; font-weight:500; min-width:280px; border:1px solid transparent; box-shadow:0 8px 32px rgba(0,0,0,0.6); transform:translateX(110%); transition:transform 0.4s cubic-bezier(0.34,1.56,0.64,1); pointer-events:all; }
   .notif.show { transform:translateX(0); }
   .notif.hide { transform:translateX(110%); transition:transform 0.3s ease; }
-  .notif.success { background:rgba(16,185,129,0.12); border-color:rgba(16,185,129,0.3); color:#6ee7b7; }
-  .notif.error   { background:rgba(239,68,68,0.12); border-color:rgba(239,68,68,0.3); color:#fca5a5; }
-  .notif.info    { background:rgba(139,92,246,0.12); border-color:rgba(139,92,246,0.3); color:#c4b5fd; }
-  .notif.warning { background:rgba(245,158,11,0.12); border-color:rgba(245,158,11,0.3); color:#fde68a; }
+  .notif.success { background:#065f46; border-color:#34d399; color:#6ee7b7; }
+  .notif.error   { background:#7f1d1d; border-color:#f87171; color:#fca5a5; }
+  .notif.info    { background:#1e3a5f; border-color:#60a5fa; color:#93c5fd; }
 
   /* LAYOUT */
   .app { display:flex; min-height:100vh; position:relative; z-index:1; }
@@ -538,19 +537,7 @@ function addDays(fromDate, days) {
 }
 
 // ── NAV ───────────────────────────────────────────────────────────────────
-document.querySelectorAll(".nav-item").forEach(item=>{
-  item.addEventListener("click",()=>{
-    document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
-    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
-    item.classList.add("active");
-    document.getElementById("page-"+item.dataset.page).classList.add("active");
-    const p=item.dataset.page;
-    if(p==="companies")  loadCompanies();
-    if(p==="users")      loadUsers();
-    if(p==="attendance") loadAttendancePage();
-    if(p==="expiring")   loadExpiring();
-  });
-});
+document.
 
 // ── INIT ──────────────────────────────────────────────────────────────────
 (async () => {
