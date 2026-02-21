@@ -2,7 +2,7 @@
   "name": "WorkPulse",
   "short_name": "WorkPulse",
   "description": "Attendance Management System",
-  "start_url": "/WorkPulse/dashboard.html",
+  "start_url": "/WorkPulse/login.html",
   "display": "standalone",
   "background_color": "#0a0f1e",
   "theme_color": "#63b3ed",
