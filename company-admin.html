@@ -130,9 +130,9 @@
   }
 
   /* ── HAMBURGER & MOBILE SIDEBAR ── */
-  .hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); flex-shrink:0; position:fixed; top:14px; left:14px; z-index:200; }
+  .hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); flex-shrink:0; position:fixed; top:14px; left:14px; z-index:600; }
   .hamburger span { display:block; width:20px; height:2px; background:var(--text2); border-radius:2px; transition:all 0.3s; }
-  .sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:400; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+  .sidebar-overlay { position:fixed; top:0; right:0; bottom:0; left:240px; background:rgba(0,0,0,0.7); z-index:400; opacity:0; pointer-events:none; transition:opacity 0.3s; }
   .sidebar-overlay.open { opacity:1; pointer-events:all; }
   .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
   @media(max-width:768px){
