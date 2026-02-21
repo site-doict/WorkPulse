@@ -283,7 +283,7 @@
       <div class="card">
         <div class="card-header"><div class="card-title">🏢 All Companies Status</div></div>
         <table>
-          <thead><tr><th>Company</th><th>Employees</th><th>Present Today</th><th>Subscription</th><th>Status</th></tr></thead>
+          <thead><tr><th>Organisation</th><th>Employees</th><th>Present Today</th><th>Subscription</th><th>Status</th></tr></thead>
           <tbody id="dashCompTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody>
         </table>
       </div>
@@ -293,7 +293,7 @@
     <div class="page" id="page-companies">
       <div class="page-header">
         <div><div class="page-title">Companies</div><div class="page-sub">Manage all registered companies</div></div>
-        <button class="btn btn-primary" id="addCompanyBtn">＋ New Company</button>
+        <button class="btn btn-primary" id="addCompanyBtn">＋ New Organisation</button>
       </div>
       <div class="card" style="margin-bottom:20px">
         <div class="card-header">
@@ -310,18 +310,18 @@
     <div class="page" id="page-users">
       <div class="page-header">
         <div><div class="page-title">All Users</div><div class="page-sub">View and manage users across all companies</div></div>
-        <button class="btn btn-primary" id="addAdminBtn">＋ Create Company Admin</button>
+        <button class="btn btn-primary" id="addAdminBtn">＋ Create Admin</button>
       </div>
       <div class="card">
         <div class="card-header">
           <div class="filters">
             <div class="search-wrap"><span class="search-icon">🔍</span><input type="text" id="userSearch" placeholder="Search name…"></div>
-            <select id="userRoleFilter"><option value="">All Roles</option><option value="company_admin">Company Admin</option><option value="employee">Employee</option></select>
+            <select id="userRoleFilter"><option value="">All Roles</option><option value="company_admin">Admin</option><option value="employee">Employee</option></select>
             <select id="userCompFilter"><option value="">All Companies</option></select>
           </div>
         </div>
         <table>
-          <thead><tr><th>Name</th><th>Role</th><th>Company</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Name</th><th>Role</th><th>Organisation</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
           <tbody id="usersTable"><tr><td colspan="6" class="empty-state"><div class="spinner"></div></td></tr></tbody>
         </table>
       </div>
@@ -341,7 +341,7 @@
           </div>
         </div>
         <table>
-          <thead><tr><th>Employee</th><th>Company</th><th>Date</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
+          <thead><tr><th>Employee</th><th>Organisation</th><th>Date</th><th>In Time</th><th>Out Time</th><th>Duration</th><th>Status</th></tr></thead>
           <tbody id="attTable"><tr><td colspan="7" class="empty-state"><div class="spinner"></div></td></tr></tbody>
         </table>
       </div>
@@ -352,7 +352,7 @@
       <div class="page-header"><div class="page-title">Expiring Soon</div><div class="page-sub">Companies with subscriptions ending in 30 days</div></div>
       <div class="card">
         <table>
-          <thead><tr><th>Company</th><th>Employees</th><th>Subscription Ends</th><th>Days Left</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Organisation</th><th>Employees</th><th>Subscription Ends</th><th>Days Left</th><th>Actions</th></tr></thead>
           <tbody id="expiringTable"><tr><td colspan="5" class="empty-state"><div class="spinner"></div></td></tr></tbody>
         </table>
       </div>
@@ -364,13 +364,13 @@
 <!-- ADD COMPANY MODAL -->
 <div class="modal-overlay" id="addCompanyModal">
   <div class="modal">
-    <div class="modal-title">🏢 New Company</div>
+    <div class="modal-title">🏢 New Organisation</div>
     <div class="modal-sub">Create a new company and its admin account</div>
 
     <div class="modal-section">
-      <div class="modal-section-title">Company Info</div>
+      <div class="modal-section-title">Organisation Info</div>
       <div class="form-grid">
-        <div class="form-group"><label>Company Name *</label><input type="text" id="nc-name" placeholder="Acme Corp"></div>
+        <div class="form-group"><label>Organisation Name *</label><input type="text" id="nc-name" placeholder="Acme Corp"></div>
         <div class="form-group"><label>Seat Limit *</label><input type="number" id="nc-seats" placeholder="10" min="1"></div>
         <div class="form-group"><label>Contact Person</label><input type="text" id="nc-contact" placeholder="John Doe"></div>
         <div class="form-group"><label>Contact Email</label><input type="email" id="nc-cemail" placeholder="contact@company.com"></div>
@@ -416,13 +416,13 @@
 <!-- EDIT COMPANY MODAL -->
 <div class="modal-overlay" id="editCompanyModal">
   <div class="modal">
-    <div class="modal-title">✏️ Edit Company</div>
+    <div class="modal-title">✏️ Edit Organisation</div>
     <div class="modal-sub">Update company information and subscription</div>
     <input type="hidden" id="ec-id">
     <div class="modal-section">
-      <div class="modal-section-title">Company Info</div>
+      <div class="modal-section-title">Organisation Info</div>
       <div class="form-grid">
-        <div class="form-group"><label>Company Name *</label><input type="text" id="ec-name"></div>
+        <div class="form-group"><label>Organisation Name *</label><input type="text" id="ec-name"></div>
         <div class="form-group"><label>Seat Limit *</label><input type="number" id="ec-seats" min="1"></div>
         <div class="form-group"><label>Contact Person</label><input type="text" id="ec-contact"></div>
         <div class="form-group"><label>Contact Email</label><input type="email" id="ec-cemail"></div>
@@ -688,7 +688,7 @@ window.toggleCompany = async (id, newStatus) => {
   else updates.suspended_at = null;
   const {error} = await supabase.from("companies").update(updates).eq("id",id);
   if (error) { notify("Error: "+error.message,"error"); return; }
-  notify(newStatus==="suspended"?"Company suspended":"Company activated", newStatus==="suspended"?"warning":"success");
+  notify(newStatus==="suspended"?"Organisation suspended":"Organisation activated", newStatus==="suspended"?"warning":"success");
   loadCompanies(); loadDashboard();
 };
 
@@ -761,7 +761,7 @@ document.getElementById("saveCompanyBtn").addEventListener("click",async()=>{
   const aname   = document.getElementById("nc-aname").value.trim();
   const days    = selectedDays==="custom" ? parseInt(document.getElementById("nc-customdays").value)||0 : selectedDays;
 
-  if (!name)   { notify("Company name required","error"); return; }
+  if (!name)   { notify("Organisation name required","error"); return; }
   if (!seats)  { notify("Seat limit required","error"); return; }
   if (!aemail) { notify("Admin email required","error"); return; }
   if (!apass||apass.length<6) { notify("Admin password must be at least 6 characters","error"); return; }
@@ -832,7 +832,7 @@ document.getElementById("saveEditCompanyBtn").addEventListener("click",async()=>
   const notes  = document.getElementById("ec-notes").value.trim();
   const days   = editSelectedDays==="custom" ? parseInt(document.getElementById("ec-customdays").value)||0 : editSelectedDays;
 
-  if (!name)  { notify("Company name required","error"); return; }
+  if (!name)  { notify("Organisation name required","error"); return; }
   if (!seats) { notify("Seat limit required","error"); return; }
 
   const co = allCompanies.find(c=>c.id===id);
@@ -845,7 +845,7 @@ document.getElementById("saveEditCompanyBtn").addEventListener("click",async()=>
   const {error} = await supabase.from("companies").update(updates).eq("id",id);
   if (error) { notify("Error: "+error.message,"error"); btn.disabled=false; btn.textContent="Save Changes"; return; }
 
-  notify("Company updated!","success");
+  notify("Organisation updated!","success");
   document.getElementById("editCompanyModal").classList.remove("open");
   loadCompanies(); loadDashboard();
   btn.disabled=false; btn.textContent="Save Changes";
@@ -902,7 +902,7 @@ window.viewUser = (id) => {
   const fields = [
     ["Full Name",       u.full_name],
     ["Role",            u.role],
-    ["Company",         co?.name],
+    ["Organisation",     co?.name],
     ["Designation",     u.designation],
     ["Department",      u.department],
     ["Gender",          u.gender],
