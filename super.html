@@ -203,6 +203,9 @@
   /* ── HAMBURGER & MOBILE SIDEBAR ── */
   .hamburger { display:none; flex-direction:column; gap:5px; cursor:pointer; padding:8px; border-radius:8px; border:1px solid var(--border); background:var(--surface2); flex-shrink:0; position:fixed; top:14px; left:14px; z-index:600; }
   .hamburger span { display:block; width:20px; height:2px; background:var(--text2); border-radius:2px; transition:all 0.3s; }
+  .hamburger.open span:nth-child(1) { transform:translateY(7px) rotate(45deg); }
+  .hamburger.open span:nth-child(2) { opacity:0; transform:scaleX(0); }
+  .hamburger.open span:nth-child(3) { transform:translateY(-7px) rotate(-45deg); }
   .sidebar-overlay { position:fixed; top:0; right:0; bottom:0; left:250px; background:rgba(0,0,0,0.7); z-index:400; opacity:0; pointer-events:none; transition:opacity 0.3s; }
   .sidebar-overlay.open { opacity:1; pointer-events:all; }
   @media(max-width:768px){
@@ -1049,10 +1052,12 @@ const sidebar = document.querySelector(".sidebar");
 hamburgerBtn.addEventListener("click", () => {
   sidebar.classList.toggle("open");
   sidebarOverlay.classList.toggle("open");
+  hamburgerBtn.classList.toggle("open");
 });
 sidebarOverlay.addEventListener("click", () => {
   sidebar.classList.remove("open");
   sidebarOverlay.classList.remove("open");
+  hamburgerBtn.classList.remove("open");
 });
 document.querySelectorAll(".nav-item").forEach(item => {
   item.addEventListener("click", () => {
@@ -1063,6 +1068,7 @@ document.querySelectorAll(".nav-item").forEach(item => {
     if (window.innerWidth <= 768) {
       sidebar.classList.remove("open");
       sidebarOverlay.classList.remove("open");
+      hamburgerBtn.classList.remove("open");
     }
     const p = item.dataset.page;
     if (p === "dashboard")  loadDashboard();
