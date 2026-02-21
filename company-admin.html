@@ -297,6 +297,7 @@
   </main>
 </div>
 
+<!-- ADD EMPLOYEE MODAL -->
 <div class="modal-overlay" id="addEmpModal">
   <div class="modal">
     <div class="modal-title">👤 Add New Employee</div>
@@ -315,6 +316,7 @@
   </div>
 </div>
 
+<!-- EDIT EMPLOYEE MODAL -->
 <div class="modal-overlay" id="editEmpModal">
   <div class="modal" style="max-width:560px;max-height:90vh;overflow-y:auto">
     <div class="modal-title">✏️ Edit Employee Profile</div>
@@ -369,13 +371,11 @@ function bdTime(t) {
   const ap=h>=12?"PM":"AM"; h=h%12||12;
   return String(h).padStart(2,"0")+":"+m+":"+sec+" "+ap;
 }
-
 function bdDate(d) {
   if (!d) return "—";
   const [y,mo,day]=d.split("-").map(Number);
   return new Date(y,mo-1,day).toLocaleDateString("en-US",{weekday:"short",day:"2-digit",month:"short",year:"numeric"});
 }
-
 function dur(a,b) {
   if (!a||!b) return "—";
   const sa=a.includes("Z")?a:a.replace(" ","T")+"Z";
@@ -383,11 +383,7 @@ function dur(a,b) {
   const m=Math.floor((new Date(sb)-new Date(sa))/60000);
   return m<0?"—":Math.floor(m/60)+"h "+m%60+"m";
 }
-
-function todayBD() { 
-  return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"}); 
-}
-
+function todayBD() { return new Date().toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"}); }
 function isLate(t,start,grace) {
   if (!t) return false;
   const s=t.includes("Z")?t:t.replace(" ","T")+"Z";
@@ -396,50 +392,29 @@ function isLate(t,start,grace) {
   return (bd.getUTCHours()*60+bd.getUTCMinutes())>(oh*60+om+(grace||15));
 }
 
-// ========== DEBUG MODE START ==========
-console.log("🔍 Starting admin.html script...");
-
 try {
-  console.log("1️⃣ Checking session...");
   const user = await checkSession();
   if (!user) throw new Error("no session");
-  console.log("✅ User logged in:", user.email, user.id);
 
-  console.log("2️⃣ Fetching profile...");
   const {data:profile, error:pe} = await supabase.from("profiles").select("role,company_id").eq("id",user.id).single();
-  console.log("📋 Profile data:", profile);
-  console.log("❌ Profile error:", pe);
-  
-  if (pe || !profile) { 
-    alert("Profile load failed: "+(pe?.message||"null")); 
-    throw new Error("no profile"); 
-  }
-  
-  if (profile.role==="employee") { 
-    window.location.href="dashboard.html"; 
-  }
+  if (pe || !profile) { alert("Profile load failed: "+(pe?.message||"null")); throw new Error("no profile"); }
+  if (profile.role==="employee")   { window.location.href="dashboard.html"; }
+  if (profile.role==="super_admin") { window.location.href="super.html"; }
 
   const companyId = profile.company_id;
   let officeStart = "09:00";
   let graceMins   = 15;
   let companyData = null;
 
-  console.log("3️⃣ Company ID:", companyId);
-
   document.getElementById("adminEmail").textContent = user.email;
   document.getElementById("todayDate").textContent = new Date().toLocaleDateString("en-US",{weekday:"long",day:"numeric",month:"long",year:"numeric",timeZone:"Asia/Dhaka"});
 
   if (companyId) {
-    console.log("4️⃣ Fetching company data...");
-    const {data:co, error:coErr} = await supabase.from("companies").select("*").eq("id",companyId).single();
-    console.log("✅ Company data:", co);
-    console.log("❌ Company error:", coErr);
-    
+    const {data:co} = await supabase.from("companies").select("*").eq("id",companyId).single();
     if (co) {
       companyData = co;
       officeStart = co.office_start_time || "09:00";
       document.getElementById("companyName").textContent = co.name+" · "+co.seat_limit+" seat limit";
-
       if (co.subscription_ends_at) {
         const expired = new Date(co.subscription_ends_at) < new Date();
         if (expired && co.status !== "suspended") {
@@ -449,44 +424,30 @@ try {
         } else if (!expired) {
           const daysLeft = Math.ceil((new Date(co.subscription_ends_at) - new Date()) / (1000*60*60*24));
           if (daysLeft <= 7 && daysLeft > 0) {
-            const banner = document.getElementById("subWarning");
-            const title  = document.getElementById("subWarningTitle");
-            const msg    = document.getElementById("subWarningMsg");
-            const icon   = document.getElementById("subWarningIcon");
-            banner.className  = "sub-warning show " + (daysLeft <= 3 ? "danger" : "warning");
-            icon.textContent  = daysLeft <= 3 ? "🚨" : "⚠️";
-            title.textContent = daysLeft <= 3 ? "Subscription Expiring in "+daysLeft+" day"+(daysLeft===1?"":"s")+"!" : "Subscription Expiring Soon";
-            msg.textContent   = "Your subscription expires on "+new Date(co.subscription_ends_at).toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})+". Contact your service provider to renew.";
+            document.getElementById("subWarning").className = "sub-warning show "+(daysLeft<=3?"danger":"warning");
+            document.getElementById("subWarningIcon").textContent  = daysLeft<=3?"🚨":"⚠️";
+            document.getElementById("subWarningTitle").textContent = daysLeft<=3?"Subscription Expiring in "+daysLeft+" day"+(daysLeft===1?"":"s")+"!":"Subscription Expiring Soon";
+            document.getElementById("subWarningMsg").textContent   = "Your subscription expires on "+new Date(co.subscription_ends_at).toLocaleDateString("en-US",{day:"2-digit",month:"long",year:"numeric"})+". Contact your service provider to renew.";
           }
         }
       }
-    } else {
-      console.warn("⚠️ No company data found for company_id:", companyId);
     }
   } else {
     document.getElementById("companyName").textContent = "⚠️ No company assigned";
-    console.warn("⚠️ User has no company_id assigned");
   }
 
-  document.getElementById("logoutBtn").addEventListener("click",()=>{
-    notify("Signing out…","info");
-    setTimeout(logoutUser,700);
-  });
+  document.getElementById("logoutBtn").addEventListener("click",()=>{notify("Signing out…","info");setTimeout(logoutUser,700);});
 
   let allEmployees = [];
 
   async function fetchEmployees() {
     if (!companyId) return [];
-    console.log("5️⃣ Fetching employees for company:", companyId);
     const {data,error} = await supabase.from("profiles").select("id,full_name,role,is_active,created_at,company_id,designation,department,gender,date_of_birth,mobile_no,emergency_mobile_no,marital_status,blood_group,address,joining_date").eq("company_id",companyId).neq("role","super_admin");
-    console.log("✅ Employees data:", data);
-    console.log("❌ Employees error:", error);
     if (error) { notify("Error: "+error.message,"error"); return []; }
     return data||[];
   }
 
   async function loadDashboard() {
-    console.log("6️⃣ Loading dashboard...");
     const emps = await fetchEmployees();
     allEmployees = emps;
     if (!emps.length) {
@@ -504,12 +465,10 @@ try {
     if (!recs.length){tbody.innerHTML="<tr><td colspan='5' class='empty-state'>No attendance records for today</td></tr>";return;}
     tbody.innerHTML=recs.map(a=>{
       const emp=emps.find(e=>e.id===a.user_id);
-      const name=emp?.full_name||a.user_id.substring(0,8)+"…";
       const late=isLate(a.in_time,officeStart,graceMins);
-      return "<tr><td>"+name+"</td><td>"+bdTime(a.in_time)+"</td><td>"+bdTime(a.out_time)+"</td><td>"+dur(a.in_time,a.out_time)+"</td><td>"+(late?"<span class='badge badge-yellow'><span class='badge-dot'></span>Late</span>":"<span class='badge badge-green'><span class='badge-dot'></span>Present</span>")+"</td></tr>";
+      return "<tr><td>"+(emp?.full_name||a.user_id.substring(0,8)+"…")+"</td><td>"+bdTime(a.in_time)+"</td><td>"+bdTime(a.out_time)+"</td><td>"+dur(a.in_time,a.out_time)+"</td><td>"+(late?"<span class='badge badge-yellow'><span class='badge-dot'></span>Late</span>":"<span class='badge badge-green'><span class='badge-dot'></span>Present</span>")+"</td></tr>";
     }).join("");
   }
-  
   loadDashboard();
 
   async function loadTodayStatus() {
@@ -525,25 +484,16 @@ try {
   }
 
   async function loadEmployees() {
-    const emps=await fetchEmployees(); 
-    allEmployees=emps; 
-    renderEmpTable(emps);
+    const emps=await fetchEmployees(); allEmployees=emps; renderEmpTable(emps);
     const attSel=document.getElementById("attEmpFilter"), repSel=document.getElementById("reportEmp");
     attSel.innerHTML="<option value=''>All Employees</option>";
     repSel.innerHTML="<option value=''>All Employees</option>";
-    emps.forEach(e=>{
-      const n=e.full_name||e.id.substring(0,8); 
-      attSel.innerHTML+="<option value='"+e.id+"'>"+n+"</option>"; 
-      repSel.innerHTML+="<option value='"+e.id+"'>"+n+"</option>";
-    });
+    emps.forEach(e=>{const n=e.full_name||e.id.substring(0,8); attSel.innerHTML+="<option value='"+e.id+"'>"+n+"</option>"; repSel.innerHTML+="<option value='"+e.id+"'>"+n+"</option>";});
   }
 
   function renderEmpTable(emps) {
     const tbody=document.getElementById("empTable");
-    if(!emps.length){
-      tbody.innerHTML="<tr><td colspan='6' class='empty-state'>No employees found</td></tr>";
-      return;
-    }
+    if(!emps.length){tbody.innerHTML="<tr><td colspan='6' class='empty-state'>No employees found</td></tr>";return;}
     tbody.innerHTML=emps.map(e=>{
       const active=e.is_active!==false;
       const joined=e.created_at?new Date(e.created_at).toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}):"—";
@@ -554,32 +504,25 @@ try {
         +"<td>"+(e.role==="company_admin"?"<span class='badge badge-orange'>Admin</span>":"<span class='badge badge-muted'>Employee</span>")+"</td>"
         +"<td>"+(active?"<span class='badge badge-green'><span class='badge-dot'></span>Active</span>":"<span class='badge badge-red'><span class='badge-dot'></span>Inactive</span>")+"</td>"
         +"<td>"+joined+"</td>"
-        +"<td style='display:flex;gap:6px'>"
-          +"<button class='btn btn-ghost btn-sm' onclick='editEmp(\""+e.id+"\")'>✏️ Profile</button>"
+        +"<td style='display:flex;gap:6px;flex-wrap:wrap'>"
+          +"<button class='btn btn-ghost btn-sm' onclick='editEmp(\""+e.id+"\")'>✏️ Edit</button>"
           +"<button class='btn "+(active?"btn-danger":"btn-ghost")+" btn-sm' onclick='toggleEmp(\""+e.id+"\","+active+")'>"+(active?"Deactivate":"Activate")+"</button>"
-        +"</td>"
-        +"</tr>";
+          +"<button class='btn btn-danger btn-sm' onclick='deleteEmp(\""+e.id+"\",\""+( e.full_name||"Employee")+"\")'>🗑</button>"
+        +"</td></tr>";
     }).join("");
   }
 
-  document.getElementById("empSearch").addEventListener("input",function(){
-    renderEmpTable(allEmployees.filter(e=>(e.full_name||"").toLowerCase().includes(this.value.toLowerCase())));
-  });
-  
-  document.getElementById("empStatusFilter").addEventListener("change",function(){
-    renderEmpTable(this.value===""?allEmployees:this.value==="active"?allEmployees.filter(e=>e.is_active!==false):allEmployees.filter(e=>e.is_active===false));
-  });
+  document.getElementById("empSearch").addEventListener("input",function(){renderEmpTable(allEmployees.filter(e=>(e.full_name||"").toLowerCase().includes(this.value.toLowerCase())));});
+  document.getElementById("empStatusFilter").addEventListener("change",function(){renderEmpTable(this.value===""?allEmployees:this.value==="active"?allEmployees.filter(e=>e.is_active!==false):allEmployees.filter(e=>e.is_active===false));});
 
   window.toggleEmp = async (id,active) => {
-    const {error} = await supabase.from("profiles").update({is_active:!active}).eq("id",id);
+    const {error}=await supabase.from("profiles").update({is_active:!active}).eq("id",id);
     if(error){notify("Error: "+error.message,"error");return;}
-    notify(active?"Employee deactivated":"Employee activated","success");
-    loadEmployees();
+    notify(active?"Employee deactivated":"Employee activated","success"); loadEmployees();
   };
 
   window.editEmp = (id) => {
-    const emp=allEmployees.find(e=>e.id===id);
-    if(!emp)return;
+    const emp=allEmployees.find(e=>e.id===id); if(!emp)return;
     document.getElementById("ee-id").value                  = emp.id;
     document.getElementById("ee-full_name").value           = emp.full_name||"";
     document.getElementById("ee-designation").value         = emp.designation||"";
@@ -595,58 +538,65 @@ try {
     document.getElementById("editEmpModal").classList.add("open");
   };
 
+  window.deleteEmp = async (id, name) => {
+    if(!confirm("⚠️ Permanently delete \""+name+"\"?\n\nThis will delete their profile AND all attendance records.\nThis CANNOT be undone!")) return;
+    await supabase.from("attendance").delete().eq("user_id", id);
+    const {error}=await supabase.from("profiles").delete().eq("id",id);
+    if(error){notify("Error: "+error.message,"error");return;}
+    notify(name+" permanently deleted.","success"); loadEmployees();
+  };
+
   document.getElementById("addEmpBtn").addEventListener("click",()=>document.getElementById("addEmpModal").classList.add("open"));
   document.getElementById("cancelEmpBtn").addEventListener("click",()=>document.getElementById("addEmpModal").classList.remove("open"));
+  document.getElementById("cancelEditEmpBtn").addEventListener("click",()=>document.getElementById("editEmpModal").classList.remove("open"));
 
   document.getElementById("saveEmpBtn").addEventListener("click",async()=>{
-    const name  = document.getElementById("newEmpName").value.trim();
-    const email = document.getElementById("newEmpEmail").value.trim();
-    const pass  = document.getElementById("newEmpPass").value.trim();
-    const role  = document.getElementById("newEmpRole").value;
-
-    if (!email) { notify("Email is required","error"); return; }
-    if (!pass||pass.length<6) { notify("Password must be at least 6 characters","error"); return; }
-    if (!companyId) { notify("No company assigned to your account","error"); return; }
-
-    const btn=document.getElementById("saveEmpBtn");
-    btn.disabled=true; btn.textContent="Creating…";
-
+    const name=document.getElementById("newEmpName").value.trim();
+    const email=document.getElementById("newEmpEmail").value.trim();
+    const pass=document.getElementById("newEmpPass").value.trim();
+    const role=document.getElementById("newEmpRole").value;
+    if (!email){notify("Email is required","error");return;}
+    if (!pass||pass.length<6){notify("Password must be at least 6 characters","error");return;}
+    if (!companyId){notify("No company assigned","error");return;}
+    const btn=document.getElementById("saveEmpBtn"); btn.disabled=true; btn.textContent="Creating…";
     try {
-      const {data:sd} = await supabase.auth.getSession();
-      const token = sd?.session?.access_token;
-      if (!token) { notify("Session expired, please login again","error"); btn.disabled=false; btn.textContent="Create Employee"; return; }
-
-      const res = await fetch(EDGE_URL, {
-        method:"POST",
-        headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-        body: JSON.stringify({email, password:pass, full_name:name||null, role, company_id:companyId})
-      });
-
-      let result;
-      try { result = await res.json(); } catch(e) { notify("Invalid response from server","error"); btn.disabled=false; btn.textContent="Create Employee"; return; }
-
-      if (result.error) {
-        notify("Error: "+result.error,"error");
-      } else {
-        notify("Employee "+email+" created!","success");
-        document.getElementById("addEmpModal").classList.remove("open");
-        document.getElementById("newEmpName").value="";
-        document.getElementById("newEmpEmail").value="";
-        document.getElementById("newEmpPass").value="";
-        loadEmployees();
-      }
-    } catch(err) {
-      notify("Network error: "+err.message,"error");
-    }
-
+      const {data:sd}=await supabase.auth.getSession();
+      const token=sd?.session?.access_token;
+      if (!token){notify("Session expired","error");btn.disabled=false;btn.textContent="Create Employee";return;}
+      const res=await fetch(EDGE_URL,{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({email,password:pass,full_name:name||null,role,company_id:companyId})});
+      let result; try{result=await res.json();}catch(e){notify("Invalid server response","error");btn.disabled=false;btn.textContent="Create Employee";return;}
+      if(result.error){notify("Error: "+result.error,"error");}
+      else{notify("Employee "+email+" created!","success");document.getElementById("addEmpModal").classList.remove("open");document.getElementById("newEmpName").value="";document.getElementById("newEmpEmail").value="";document.getElementById("newEmpPass").value="";loadEmployees();}
+    }catch(err){notify("Network error: "+err.message,"error");}
     btn.disabled=false; btn.textContent="Create Employee";
+  });
+
+  document.getElementById("saveEditEmpBtn").addEventListener("click",async()=>{
+    const id=document.getElementById("ee-id").value;
+    const updates={
+      full_name:document.getElementById("ee-full_name").value.trim()||null,
+      designation:document.getElementById("ee-designation").value.trim()||null,
+      department:document.getElementById("ee-department").value.trim()||null,
+      gender:document.getElementById("ee-gender").value||null,
+      date_of_birth:document.getElementById("ee-date_of_birth").value||null,
+      marital_status:document.getElementById("ee-marital_status").value||null,
+      blood_group:document.getElementById("ee-blood_group").value||null,
+      joining_date:document.getElementById("ee-joining_date").value||null,
+      mobile_no:document.getElementById("ee-mobile_no").value.trim()||null,
+      emergency_mobile_no:document.getElementById("ee-emergency_mobile_no").value.trim()||null,
+      address:document.getElementById("ee-address").value.trim()||null,
+    };
+    const btn=document.getElementById("saveEditEmpBtn"); btn.disabled=true; btn.textContent="Saving…";
+    const{error}=await supabase.from("profiles").update(updates).eq("id",id);
+    if(error){notify("Error: "+error.message,"error");}
+    else{notify("Profile updated!","success");document.getElementById("editEmpModal").classList.remove("open");loadEmployees();}
+    btn.disabled=false; btn.textContent="Save Changes";
   });
 
   async function loadAttendancePage() {
     if(!allEmployees.length) await loadEmployees();
     const to=todayBD(), from=new Date(Date.now()-6*24*60*60*1000).toLocaleDateString("en-CA",{timeZone:"Asia/Dhaka"});
-    document.getElementById("attDateFrom").value=from; 
-    document.getElementById("attDateTo").value=to;
+    document.getElementById("attDateFrom").value=from; document.getElementById("attDateTo").value=to;
     fetchAttendance(from,to,"");
   }
 
@@ -661,15 +611,12 @@ try {
     if(!data?.length){tbody.innerHTML="<tr><td colspan='6' class='empty-state'>No records found</td></tr>";return;}
     tbody.innerHTML=data.map(a=>{
       const emp=allEmployees.find(e=>e.id===a.user_id);
-      const name=emp?.full_name||a.user_id.substring(0,8)+"…";
       const late=isLate(a.in_time,officeStart,graceMins);
-      return "<tr><td>"+name+"</td><td>"+bdDate(a.date)+"</td><td>"+bdTime(a.in_time)+"</td><td>"+bdTime(a.out_time)+"</td><td>"+dur(a.in_time,a.out_time)+"</td><td>"+(late?"<span class='badge badge-yellow'><span class='badge-dot'></span>Late</span>":"<span class='badge badge-green'><span class='badge-dot'></span>Present</span>")+"</td></tr>";
-    }).join("");
-    window._attData=data;
+      return "<tr><td>"+(emp?.full_name||a.user_id.substring(0,8)+"…")+"</td><td>"+bdDate(a.date)+"</td><td>"+bdTime(a.in_time)+"</td><td>"+bdTime(a.out_time)+"</td><td>"+dur(a.in_time,a.out_time)+"</td><td>"+(late?"<span class='badge badge-yellow'><span class='badge-dot'></span>Late</span>":"<span class='badge badge-green'><span class='badge-dot'></span>Present</span>")+"</td></tr>";
+    }).join(""); window._attData=data;
   }
 
   document.getElementById("attFilterBtn").addEventListener("click",()=>fetchAttendance(document.getElementById("attDateFrom").value,document.getElementById("attDateTo").value,document.getElementById("attEmpFilter").value));
-  
   document.getElementById("attExportBtn").addEventListener("click",()=>{
     if(!window._attData?.length){notify("No data to export","info");return;}
     exportCSV(window._attData.map(a=>{const emp=allEmployees.find(e=>e.id===a.user_id);return{Employee:emp?.full_name||a.user_id,Date:a.date,"In Time":bdTime(a.in_time),"Out Time":bdTime(a.out_time),Duration:dur(a.in_time,a.out_time),Status:isLate(a.in_time,officeStart,graceMins)?"Late":"Present"};}), "attendance_export");
@@ -677,13 +624,9 @@ try {
 
   function initReports() {
     if(!allEmployees.length) loadEmployees();
-    const sel=document.getElementById("reportMonth"); 
-    sel.innerHTML="";
+    const sel=document.getElementById("reportMonth"); sel.innerHTML="";
     const now=new Date();
-    for(let i=0;i<12;i++){
-      const d=new Date(now.getFullYear(),now.getMonth()-i,1);
-      sel.innerHTML+="<option value='"+d.toLocaleDateString("en-CA").substring(0,7)+"'>"+d.toLocaleDateString("en-US",{month:"long",year:"numeric"})+"</option>";
-    }
+    for(let i=0;i<12;i++){const d=new Date(now.getFullYear(),now.getMonth()-i,1);sel.innerHTML+="<option value='"+d.toLocaleDateString("en-CA").substring(0,7)+"'>"+d.toLocaleDateString("en-US",{month:"long",year:"numeric"})+"</option>";}
   }
 
   document.getElementById("reportGenBtn").addEventListener("click",async()=>{
@@ -693,8 +636,7 @@ try {
     const from=month+"-01", to=new Date(y,m,0).toISOString().split("T")[0];
     let q=supabase.from("attendance").select("*").in("user_id",allEmployees.map(e=>e.id)).gte("date",from).lte("date",to);
     if(empId) q=q.eq("user_id",empId);
-    const{data,error}=await q;
-    if(error){notify("Error: "+error.message,"error");return;}
+    const{data,error}=await q; if(error){notify("Error: "+error.message,"error");return;}
     const totalDays=new Date(y,m,0).getDate();
     const emps=empId?allEmployees.filter(e=>e.id===empId):allEmployees;
     const rows=emps.map(e=>{
@@ -704,8 +646,7 @@ try {
       const avgM=pDays>0?Math.floor(totalM/pDays):0;
       return{emp:e,presentDays:pDays,absentDays:Math.max(0,totalDays-pDays),lateDays:lDays,totalHrs:Math.floor(totalM/60)+"h "+totalM%60+"m",avgHrs:Math.floor(avgM/60)+"h "+avgM%60+"m"};
     });
-    const tbody=document.getElementById("reportTable");
-    tbody.innerHTML=rows.length?rows.map(r=>"<tr><td>"+(r.emp.full_name||r.emp.id.substring(0,8)+"…")+"</td><td><span class='badge badge-green'>"+r.presentDays+"</span></td><td><span class='badge badge-red'>"+r.absentDays+"</span></td><td><span class='badge badge-yellow'>"+r.lateDays+"</span></td><td>"+r.totalHrs+"</td><td>"+r.avgHrs+"</td></tr>").join(""):"<tr><td colspan='6' class='empty-state'>No data</td></tr>";
+    document.getElementById("reportTable").innerHTML=rows.length?rows.map(r=>"<tr><td>"+(r.emp.full_name||r.emp.id.substring(0,8)+"…")+"</td><td><span class='badge badge-green'>"+r.presentDays+"</span></td><td><span class='badge badge-red'>"+r.absentDays+"</span></td><td><span class='badge badge-yellow'>"+r.lateDays+"</span></td><td>"+r.totalHrs+"</td><td>"+r.avgHrs+"</td></tr>").join(""):"<tr><td colspan='6' class='empty-state'>No data</td></tr>";
     window._reportData=rows;
   });
 
@@ -720,102 +661,42 @@ try {
     document.getElementById("settingSeatLimit").value=companyData.seat_limit||"";
     document.getElementById("settingOfficeStart").value=companyData.office_start_time||"09:00";
   }
-  
   document.getElementById("saveCompanyBtn").addEventListener("click",async()=>{
     const name=document.getElementById("settingCompanyName").value.trim(), seats=parseInt(document.getElementById("settingSeatLimit").value);
     if(!name){notify("Company name required","error");return;}
     const{error}=await supabase.from("companies").update({name,seat_limit:seats}).eq("id",companyId);
     if(error){notify("Error: "+error.message,"error");return;}
-    notify("Company info saved!","success"); 
-    document.getElementById("companyName").textContent=name+" · "+seats+" seat limit";
+    notify("Company info saved!","success"); document.getElementById("companyName").textContent=name+" · "+seats+" seat limit";
     if(companyData){companyData.name=name;companyData.seat_limit=seats;}
   });
-  
   document.getElementById("saveOfficeBtn").addEventListener("click",async()=>{
     const start=document.getElementById("settingOfficeStart").value, grace=parseInt(document.getElementById("settingGrace").value)||15;
     const{error}=await supabase.from("companies").update({office_start_time:start}).eq("id",companyId);
     if(error){notify("Error: "+error.message,"error");return;}
-    officeStart=start; graceMins=grace; 
-    notify("Office hours saved!","success");
+    officeStart=start; graceMins=grace; notify("Office hours saved!","success");
   });
 
   function exportCSV(rows,filename) {
     if(!rows.length)return;
     const h=Object.keys(rows[0]);
     const csv=[h.join(","),...rows.map(r=>h.map(k=>'"'+r[k]+'"').join(","))].join("\n");
-    const a=document.createElement("a");
-    a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));
-    a.download=filename+"_"+todayBD()+".csv"; 
-    a.click();
+    const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download=filename+"_"+todayBD()+".csv"; a.click();
     notify("CSV exported!","success");
   }
 
-  const hamburgerBtn = document.getElementById("hamburgerBtn");
-  const sidebarOverlay = document.getElementById("sidebarOverlay");
-  const sidebar = document.querySelector(".sidebar");
-  
-  hamburgerBtn.addEventListener("click", () => {
-    sidebar.classList.toggle("open");
-    sidebarOverlay.classList.toggle("open");
-  });
-  
-  sidebarOverlay.addEventListener("click", () => {
-    sidebar.classList.remove("open");
-    sidebarOverlay.classList.remove("open");
-  });
-  
-  document.querySelectorAll(".nav-item").forEach(item => {
-    item.addEventListener("click", () => {
-      if (window.innerWidth <= 768) {
-        sidebar.classList.remove("open");
-        sidebarOverlay.classList.remove("open");
-      }
-    });
-  });
+  const hamburgerBtn=document.getElementById("hamburgerBtn");
+  const sidebarOverlay=document.getElementById("sidebarOverlay");
+  const sidebar=document.querySelector(".sidebar");
+  hamburgerBtn.addEventListener("click",()=>{sidebar.classList.toggle("open");sidebarOverlay.classList.toggle("open");});
+  sidebarOverlay.addEventListener("click",()=>{sidebar.classList.remove("open");sidebarOverlay.classList.remove("open");});
 
-  if ("serviceWorker" in navigator) { 
-    navigator.serviceWorker.register("./sw.js").catch(()=>{}); 
-  }
-
-  document.getElementById("cancelEditEmpBtn").addEventListener("click",()=>document.getElementById("editEmpModal").classList.remove("open"));
-  
-  document.getElementById("saveEditEmpBtn").addEventListener("click",async()=>{
-    const id = document.getElementById("ee-id").value;
-    const updates = {
-      full_name:           document.getElementById("ee-full_name").value.trim()||null,
-      designation:         document.getElementById("ee-designation").value.trim()||null,
-      department:          document.getElementById("ee-department").value.trim()||null,
-      gender:              document.getElementById("ee-gender").value||null,
-      date_of_birth:       document.getElementById("ee-date_of_birth").value||null,
-      marital_status:      document.getElementById("ee-marital_status").value||null,
-      blood_group:         document.getElementById("ee-blood_group").value||null,
-      joining_date:        document.getElementById("ee-joining_date").value||null,
-      mobile_no:           document.getElementById("ee-mobile_no").value.trim()||null,
-      emergency_mobile_no: document.getElementById("ee-emergency_mobile_no").value.trim()||null,
-      address:             document.getElementById("ee-address").value.trim()||null,
-    };
-    const btn=document.getElementById("saveEditEmpBtn");
-    btn.disabled=true; btn.textContent="Saving…";
-    const{error}=await supabase.from("profiles").update(updates).eq("id",id);
-    if(error){
-      notify("Error: "+error.message,"error");
-    } else {
-      notify("Profile updated!","success");
-      document.getElementById("editEmpModal").classList.remove("open");
-      loadEmployees();
-    }
-    btn.disabled=false; btn.textContent="Save Changes";
-  });
-
-  console.log("✅ Admin script loaded successfully!");
-
-  // ========== NAVIGATION EVENT LISTENERS (Must be inside try-catch) ==========
   document.querySelectorAll(".nav-item").forEach(item=>{
     item.addEventListener("click",()=>{
       document.querySelectorAll(".nav-item").forEach(n=>n.classList.remove("active"));
       document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
       item.classList.add("active");
       document.getElementById("page-"+item.dataset.page).classList.add("active");
+      if(window.innerWidth<=768){sidebar.classList.remove("open");sidebarOverlay.classList.remove("open");}
       const p=item.dataset.page;
       if(p==="today")      loadTodayStatus();
       if(p==="employees")  loadEmployees();
@@ -825,12 +706,12 @@ try {
     });
   });
 
-} catch(err) {
-  console.error("💥 FATAL ERROR:", err);
-  alert("Critical error loading admin page: " + err.message + "\n\nCheck console (F12) for details.");
-}
-// ========== DEBUG MODE END ==========
+  if("serviceWorker" in navigator){navigator.serviceWorker.register("./sw.js").catch(()=>{});}
 
+} catch(err) {
+  console.error("Fatal error:", err);
+  if(err.message !== "no session") alert("Error loading page: "+err.message);
+}
 </script>
 </body>
 </html>
