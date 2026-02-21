@@ -493,11 +493,22 @@ async function loadEmployees() {
 
 function renderEmpTable(emps) {
   const tbody=document.getElementById("empTable");
-  if(!emps.length){tbody.innerHTML="<tr><td colspan='5' class='empty-state'>No employees found</td></tr>";return;}
+  if(!emps.length){tbody.innerHTML="<tr><td colspan='6' class='empty-state'>No employees found</td></tr>";return;}
   tbody.innerHTML=emps.map(e=>{
     const active=e.is_active!==false;
     const joined=e.created_at?new Date(e.created_at).toLocaleDateString("en-US",{day:"2-digit",month:"short",year:"numeric"}):"—";
-    return "<tr><td>"+(e.full_name||"—")+"</td><td>"+(e.role==="company_admin"?"<span class='badge badge-orange'>Admin</span>":"<span class='badge badge-muted'>Employee</span>")+"</td><td>"+(active?"<span class='badge badge-green'><span class='badge-dot'></span>Active</span>":"<span class='badge badge-red'><span class='badge-dot'></span>Inactive</span>")+"</td><td>"+joined+"</td><td style='display:flex;gap:6px'><button class='btn btn-ghost btn-sm' onclick=\"editEmp('"+e.id+"')\">Edit</button><button class='btn "+(active?"btn-danger":"btn-ghost")+" btn-sm' onclick=\"toggleEmp('"+e.id+"',"+active+")\">"+( active?"Deactivate":"Activate")+"</button></td></tr>";
+    const desig=e.designation?"<span style='color:var(--accent);font-size:11px'>"+e.designation+"</span>"+(e.department?"<br><span style='color:var(--muted);font-size:10px'>"+e.department+"</span>":""):"<span style='color:var(--muted)'>—</span>";
+    return "<tr>"
+      +"<td><strong>"+(e.full_name||"—")+"</strong></td>"
+      +"<td>"+desig+"</td>"
+      +"<td>"+(e.role==="company_admin"?"<span class='badge badge-orange'>Admin</span>":"<span class='badge badge-muted'>Employee</span>")+"</td>"
+      +"<td>"+(active?"<span class='badge badge-green'><span class='badge-dot'></span>Active</span>":"<span class='badge badge-red'><span class='badge-dot'></span>Inactive</span>")+"</td>"
+      +"<td>"+joined+"</td>"
+      +"<td style='display:flex;gap:6px'>"
+        +"<button class='btn btn-ghost btn-sm' onclick="editEmp('"+e.id+"')">✏️ Profile</button>"
+        +"<button class='btn "+(active?"btn-danger":"btn-ghost")+" btn-sm' onclick="toggleEmp('"+e.id+"',"+active+")">"+( active?"Deactivate":"Activate")+"</button>"
+      +"</td>"
+      +"</tr>";
   }).join("");
 }
 
