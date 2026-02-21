@@ -887,9 +887,10 @@ function renderUsersTable(users) {
       <td>${co?"<span class='badge badge-blue'>"+co.name+"</span>":"<span class='badge badge-muted'>—</span>"}</td>
       <td>${active?"<span class='badge badge-green'><span class='badge-dot'></span>Active</span>":"<span class='badge badge-red'><span class='badge-dot'></span>Inactive</span>"}</td>
       <td>${joined}</td>
-      <td style="display:flex;gap:5px">
-        <button class="btn btn-ghost btn-sm" onclick="editUser('${u.id}')">Edit</button>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="viewUser('${u.id}')">👁 Profile</button>
         <button class="btn ${active?"btn-danger":"btn-success"} btn-sm" onclick="toggleUser('${u.id}',${active})">${active?"Deactivate":"Activate"}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}','${(u.full_name||"User").replace(/'/g,"\'")}')">🗑</button>
       </td>
     </tr>`;
   }).join("");
@@ -910,12 +911,42 @@ window.toggleUser = async(id,active)=>{
   if(error){notify("Error: "+error.message,"error");return;}
   notify(active?"User deactivated":"User activated","success"); loadUsers();
 };
-window.editUser = async(id)=>{
-  const u=allUsers.find(x=>x.id===id);
-  const n=prompt("Full name:",u?.full_name||""); if(n===null)return;
-  const{error}=await supabase.from("profiles").update({full_name:n}).eq("id",id);
+window.viewUser = (id) => {
+  const u=allUsers.find(x=>x.id===id); if(!u)return;
+  const co=allCompanies.find(c=>c.id===u.company_id);
+  const fields = [
+    ["Full Name",       u.full_name],
+    ["Role",            u.role],
+    ["Company",         co?.name],
+    ["Designation",     u.designation],
+    ["Department",      u.department],
+    ["Gender",          u.gender],
+    ["Date of Birth",   u.date_of_birth],
+    ["Blood Group",     u.blood_group],
+    ["Marital Status",  u.marital_status],
+    ["Joining Date",    u.joining_date],
+    ["Mobile",          u.mobile_no],
+    ["Emergency Mobile",u.emergency_mobile_no],
+    ["Address",         u.address],
+  ];
+  document.getElementById("viewUserName").textContent = u.full_name||"—";
+  document.getElementById("viewUserRole").textContent = u.role==="company_admin"?"Company Admin":"Employee";
+  document.getElementById("viewUserCompany").textContent = co?.name||"—";
+  const grid = document.getElementById("viewUserGrid");
+  grid.innerHTML = fields.filter(([,v])=>v).map(([k,v])=>`
+    <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 14px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${k}</div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--text)">${v}</div>
+    </div>`).join("");
+  document.getElementById("viewUserModal").classList.add("open");
+};
+
+window.deleteUser = async (id, name) => {
+  if(!confirm("⚠️ Permanently delete ""+name+""?\n\nThis will delete their profile AND all attendance records.\nThis CANNOT be undone!")) return;
+  await supabase.from("attendance").delete().eq("user_id", id);
+  const {error}=await supabase.from("profiles").delete().eq("id",id);
   if(error){notify("Error: "+error.message,"error");return;}
-  notify("User updated","success"); loadUsers();
+  notify(name+" permanently deleted.","success"); loadUsers();
 };
 
 // ── ADD ADMIN MODAL ───────────────────────────────────────────────────────
@@ -1049,5 +1080,23 @@ document.querySelectorAll(".nav-item").forEach(item => {
 if ("serviceWorker" in navigator) { navigator.serviceWorker.register("./sw.js").catch(()=>{}); }
 
 </script>
+
+<!-- VIEW USER PROFILE MODAL -->
+<div class="modal-overlay" id="viewUserModal">
+  <div class="modal" style="max-width:540px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px">
+      <div style="width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">👤</div>
+      <div>
+        <div style="font-size:18px;font-weight:800" id="viewUserName">—</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--accent);margin-top:2px" id="viewUserRole">—</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--text2);margin-top:2px" id="viewUserCompany">—</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="viewUserGrid"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="document.getElementById('viewUserModal').classList.remove('open')">Close</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
