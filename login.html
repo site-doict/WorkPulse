@@ -153,6 +153,7 @@
   <div class="card">
     <div class="card-title">Welcome back</div>
     <div class="card-sub">Sign in to your account</div>
+    <div id="companyNameBadge" style="display:none;margin-bottom:20px;padding:8px 14px;background:rgba(99,179,237,0.08);border:1px solid rgba(99,179,237,0.2);border-radius:8px;font-family:var(--mono);font-size:12px;color:var(--accent2);text-align:center">🏢 <span id="companyNameText"></span></div>
 
     <div class="form-group">
       <label>Email Address</label>
@@ -274,12 +275,21 @@ async function doLogin() {
       }
     }
 
-    // All checks passed — redirect
-    if (role === "company_admin") {
-      window.location.href = "company-admin.html";
-    } else {
-      window.location.href = "dashboard.html";
+    // All checks passed — show company name then redirect
+    if (profile && profile.company_id) {
+      const { data: coName } = await supabase.from("companies").select("name").eq("id", profile.company_id).single();
+      if (coName) {
+        document.getElementById("companyNameText").textContent = coName.name;
+        document.getElementById("companyNameBadge").style.display = "block";
+      }
     }
+    setTimeout(() => {
+      if (role === "company_admin") {
+        window.location.href = "company-admin.html";
+      } else {
+        window.location.href = "dashboard.html";
+      }
+    }, 600);
 
   } catch(err) {
     document.getElementById("msgErrorText").textContent = "Network error. Please try again.";
